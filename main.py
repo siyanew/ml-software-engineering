@@ -1,4 +1,9 @@
+from config.config import Config
+
 if __name__ == '__main__':
+    # Load config
+    config = Config()
+
     # Download data
 
     # Filter data
