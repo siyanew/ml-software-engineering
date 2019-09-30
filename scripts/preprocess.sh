@@ -6,5 +6,5 @@ python OpenNMT-py/preprocess.py \
     -save_data model/demo \
     -src_seq_length 100 \
     -tgt_seq_length 30 \
-    -lower True \
-    -shuffle 1 \ # This was not done by the paper, but should yield the same results
+    -lower \
+#    -shuffle 1 # This was not done by the paper, but should yield the same results
