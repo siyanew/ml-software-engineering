@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 python OpenNMT-py/train.py \
     -data model/demo \
     -save_model model/demo-model \
@@ -18,7 +19,4 @@ python OpenNMT-py/train.py \
     -valid_steps 10000 \
     -save_checkpoint_steps 30000 \
     -keep_checkpoint -1 \
-    -early_stopping 10 \ `# Not supplied by paper, this is the default from their framework` \
-
-
-
+    -early_stopping 10 # Not supplied by paper, this is the default from their framework`

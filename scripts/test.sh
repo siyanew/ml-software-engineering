@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 python OpenNMT-py/translate.py \
     -model model/demo-model_step_5000.pt  \
     -src NMT1/TestSet/test.3000.diff \

@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 python OpenNMT-py/preprocess.py \
     -train_src NMT1/TrainingSet/train.26208.diff \
     -train_tgt NMT1/TrainingSet/train.26208.msg \
