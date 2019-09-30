@@ -161,4 +161,4 @@ $RECYCLE.BIN/
 *.lnk
 
 # Ignore generated model data
-model/
+model/*.pt
