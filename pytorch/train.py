@@ -22,7 +22,18 @@ def main(config):
 
     # setup data_loader instances
     data_loader = config.init_obj('data_loader', module_data)
+    print("Train Dataloader")
+    print(type(data_loader))
+    print(data_loader.__dict__)
     valid_data_loader = data_loader.split_validation()
+    print("Train valid dataloader")
+    print(type(valid_data_loader))
+
+    for batch_idx, (data, target) in iter(valid_data_loader):
+        print(batch_idx)
+        print(data)
+        print(target)
+        exit(0)
 
     # build model architecture, then print to console
     model = config.init_obj('arch', module_arch)
