@@ -1,16 +1,29 @@
 {
-  "name": "Mnist_LeNet",
+  "name": "Seq2Seq_Multi30k",
   "n_gpu": 1,
   "arch": {
-    "type": "MnistModel",
-    "args": {}
+    "type": "Seq2Seq",
+    "args": {
+      "input_dim": 7855,
+      "output_dim": 5923,
+      "enc_emb_dim": 256,
+      "dec_emb_dim": 256,
+      "hid_dim": 512,
+      "n_layers": 2,
+      "enc_dropout": 0.5,
+      "dec_dropout": 0.5
+    }
   },
   "data_loader": {
     "type": "LanguageDataLoader",
     "iterator": true,
     "args": {
       "data_dir": "data/multi30k",
-      "batch_sizes": "(128, 128, 1)"
+      "batch_sizes": [
+        128,
+        128,
+        1
+      ]
     }
   },
   "optimizer": {
@@ -21,7 +34,10 @@
       "amsgrad": true
     }
   },
-  "loss": "nll_loss",
+  "loss": {
+    "function": "cross_entropy",
+    "padding_idx": true
+  },
   "metrics": [
     "accuracy",
     "top_k_acc"

@@ -1,4 +1,5 @@
 import spacy
+import torch
 from base import BaseDataLoader
 from torchtext.data import BucketIterator, Field
 from torchtext.datasets import Multi30k
@@ -56,13 +57,16 @@ class LanguageDataLoader:
         print(f"Number of testing examples: {len(test_data.examples)}")
         SRC.build_vocab(train_data, min_freq=2)
         TRG.build_vocab(train_data, min_freq=2)
-        print(f"Unique tokens in source (de) vocabulary: {len(SRC.vocab)}")
-        print(f"Unique tokens in target (en) vocabulary: {len(TRG.vocab)}")
+        print(f"Unique tokens in source (de) training vocabulary: {len(SRC.vocab)}")
+        print(f"Unique tokens in target (en) training vocabulary: {len(TRG.vocab)}")
 
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         # padding all the sentences to same length, replacing words by its index,
         # bucketing (minimizes the amount of padding by grouping similar length sentences)
         train_iterator, valid_iterator, test_iterator = BucketIterator.splits((train_data, valid_data, test_data),
-                                                                              batch_size=batch_sizes)
+                                                                              batch_sizes=batch_sizes, device=device)
+        self.SRC = SRC
+        self.TRG = TRG
         self.valid_iterator = valid_iterator
         self.train_iterator = train_iterator
         self.test_iterator = test_iterator

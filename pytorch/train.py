@@ -1,14 +1,14 @@
 import argparse
 import collections
-import torch
-import numpy as np
+
 import data_loader.data_loaders as module_data
 import model.loss as module_loss
 import model.metric as module_metric
 import model.model as module_arch
+import numpy as np
+import torch
 from parse_config import ConfigParser
 from trainer import Trainer
-
 
 # fix random seeds for reproducibility
 SEED = 123
@@ -16,6 +16,7 @@ torch.manual_seed(SEED)
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 np.random.seed(SEED)
+
 
 def main(config):
     logger = config.get_logger('train')
@@ -34,7 +35,12 @@ def main(config):
     logger.info(model)
 
     # get function handles of loss and metrics
-    criterion = getattr(module_loss, config['loss'])
+    criterion = getattr(module_loss, config['loss']['function'])
+
+    # set the padding index in the criterion such that we ignore pad tokens
+    if config['loss']['padding_idx']:
+        criterion = criterion(data_loader.TRG.vocab.stoi['<pad>'])
+
     metrics = [getattr(module_metric, met) for met in config['metrics']]
 
     # build optimizer, learning rate scheduler. delete every lines containing lr_scheduler for disabling scheduler
