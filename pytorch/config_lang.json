@@ -7,12 +7,10 @@
   },
   "data_loader": {
     "type": "LanguageDataLoader",
+    "iterator": true,
     "args": {
       "data_dir": "data/multi30k",
-      "batch_size": 64,
-      "shuffle": true,
-      "validation_split": 0.1,
-      "num_workers": 0
+      "batch_sizes": "(128, 128, 1)"
     }
   },
   "optimizer": {

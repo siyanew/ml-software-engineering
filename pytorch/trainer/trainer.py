@@ -38,8 +38,6 @@ class Trainer(BaseTrainer):
         """
         self.model.train()
         self.train_metrics.reset()
-        print(type(self.data_loader))
-        print(len(self.data_loader))
         for batch_idx, (data, target) in enumerate(self.data_loader):
             print(batch_idx)
             print(data)

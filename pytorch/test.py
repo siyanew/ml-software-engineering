@@ -12,14 +12,19 @@ def main(config):
     logger = config.get_logger('test')
 
     # setup data_loader instances
-    data_loader = getattr(module_data, config['data_loader']['type'])(
-        config['data_loader']['args']['data_dir'],
-        batch_size=512,
-        shuffle=False,
-        validation_split=0.0,
-        training=False,
-        num_workers=2
-    )
+
+    if config['data_loader']['iterator']:
+        loaders = config.init_obj('data_loader', module_data)
+        data_loader = loaders.split_train()
+    else:
+        data_loader = getattr(module_data, config['data_loader']['type'])(
+            config['data_loader']['args']['data_dir'],
+            batch_size=512,
+            shuffle=False,
+            validation_split=0.0,
+            training=False,
+            num_workers=2
+        )
 
     # build model architecture
     model = config.init_obj('arch', module_arch)

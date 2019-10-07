@@ -17,14 +17,11 @@ class MnistDataLoader(BaseDataLoader):
         ])
         self.data_dir = data_dir
         self.dataset = vdatasets.MNIST(self.data_dir, train=training, download=True, transform=trsfm)
-        print(type(self.dataset))
-        print(self.dataset.__dict__)
-
         super().__init__(self.dataset, batch_size, shuffle, validation_split, num_workers)
 
 
-class LanguageDataLoader(BaseDataLoader):
-    def __init__(self, data_dir, batch_size, shuffle=True, validation_split=0.0, num_workers=1, training=True):
+class LanguageDataLoader:
+    def __init__(self, data_dir, batch_sizes):
         spacy_de = spacy.load('de')
         spacy_en = spacy.load('de')
 
@@ -51,7 +48,9 @@ class LanguageDataLoader(BaseDataLoader):
                     lower=True)
 
         train_data, valid_data, test_data = Multi30k.splits(exts=('.de', '.en'),
-                                                            fields=(SRC, TRG))
+                                                            fields=(SRC, TRG),
+                                                            root=data_dir
+                                                            )
         print(f"Number of training examples: {len(train_data.examples)}")
         print(f"Number of validation examples: {len(valid_data.examples)}")
         print(f"Number of testing examples: {len(test_data.examples)}")
@@ -60,12 +59,19 @@ class LanguageDataLoader(BaseDataLoader):
         print(f"Unique tokens in source (de) vocabulary: {len(SRC.vocab)}")
         print(f"Unique tokens in target (en) vocabulary: {len(TRG.vocab)}")
 
-        # train_iterator, valid_iterator, test_iterator = BucketIterator.splits(
-        #     (train_data, valid_data, test_data),
-        #     batch_size=batch_size)
+        # padding all the sentences to same length, replacing words by its index,
+        # bucketing (minimizes the amount of padding by grouping similar length sentences)
+        train_iterator, valid_iterator, test_iterator = BucketIterator.splits((train_data, valid_data, test_data),
+                                                                              batch_size=batch_sizes)
+        self.valid_iterator = valid_iterator
+        self.train_iterator = train_iterator
+        self.test_iterator = test_iterator
 
-        # self.dataset = (train_data, valid_data)
-        self.dataset = train_data
-        self.data_dir = data_dir
+    def split_validation(self):
+        return self.valid_iterator
 
-        super().__init__(self.dataset, batch_size, shuffle, validation_split, num_workers)
+    def split_train(self):
+        return self.train_iterator
+
+    def split_test(self):
+        return self.test_iterator
