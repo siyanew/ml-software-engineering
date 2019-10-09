@@ -1,3 +1,4 @@
+import importlib
 import os
 import logging
 from pathlib import Path
@@ -77,7 +78,7 @@ class ConfigParser:
         modification = {opt.target : getattr(args, _get_opt_name(opt.flags)) for opt in options}
         return cls(config, resume, modification)
 
-    def init_obj(self, name, module, *args, **kwargs):
+    def init_obj(self, name, module=None, *args, **kwargs):
         """
         Finds a function handle with the name given as 'type' in config, and returns the
         instance initialized with corresponding arguments given.
@@ -86,7 +87,15 @@ class ConfigParser:
         is equivalent to
         `object = module.name(a, b=1)`
         """
-        module_name = self[name]['type']
+        if module is None:
+            module = importlib.import_module(self['arch']['file'])
+
+        # Default to class Model if type is undefined
+        if 'type' in self[name]:
+            module_name = self[name]['type']
+        else:
+            module_name = 'Model'
+
         module_args = dict(self[name]['args'])
         assert all([k not in module_args for k in kwargs]), 'Overwriting kwargs given in config file is not allowed'
         module_args.update(kwargs)

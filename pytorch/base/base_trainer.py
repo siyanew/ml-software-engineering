@@ -1,3 +1,5 @@
+import time
+
 import torch
 from abc import abstractmethod
 from numpy import inf
@@ -63,15 +65,19 @@ class BaseTrainer:
         """
         not_improved_count = 0
         for epoch in range(self.start_epoch, self.epochs + 1):
+            start_time = time.time()
             result = self._train_epoch(epoch)
+            end_time = time.time()
 
             # save logged informations into log dict
-            log = {'epoch': epoch}
+            log = {}
             log.update(result)
 
             # print logged informations to the screen
+            mins, secs = epoch_time(start_time, end_time)
+            print(f'Epoch: {epoch:02} | Time: {mins}m {secs}s')
             for key, value in log.items():
-                self.logger.info('    {:15s}: {}'.format(str(key), value))
+                self.logger.info(f'\t {str(key):15s} \t: {value:.3f}')
 
             # evaluate model performance according to configured metric, save best checkpoint as model_best
             best = False
@@ -169,3 +175,9 @@ class BaseTrainer:
             self.optimizer.load_state_dict(checkpoint['optimizer'])
 
         self.logger.info("Checkpoint loaded. Resume training from epoch {}".format(self.start_epoch))
+
+def epoch_time(start_time, end_time):
+    elapsed_time = end_time - start_time
+    elapsed_mins = int(elapsed_time / 60)
+    elapsed_secs = int(elapsed_time - (elapsed_mins * 60))
+    return elapsed_mins, elapsed_secs

@@ -2,7 +2,7 @@
   "name": "Seq2Seq_Multi30k",
   "n_gpu": 1,
   "arch": {
-    "type": "Seq2Seq",
+    "file": "model.seq2seq_multi_LSTM",
     "args": {
       "input_dim": 7855,
       "output_dim": 5923,
@@ -38,10 +38,7 @@
     "function": "cross_entropy",
     "padding_idx": true
   },
-  "metrics": [
-    "accuracy",
-    "top_k_acc"
-  ],
+  "metrics": [],
   "lr_scheduler": {
     "type": "StepLR",
     "args": {

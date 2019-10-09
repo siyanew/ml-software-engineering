@@ -1,12 +1,14 @@
 import argparse
 import collections
+import importlib
+
+import numpy as np
+import torch
 
 import data_loader.data_loaders as module_data
 import model.loss as module_loss
 import model.metric as module_metric
-import model.model as module_arch
-import numpy as np
-import torch
+# import model.model as module_arch
 from parse_config import ConfigParser
 from trainer import Trainer
 
@@ -31,6 +33,7 @@ def main(config):
         valid_data_loader = data_loader.split_validation()
 
     # build model architecture, then print to console
+    module_arch = importlib.import_module(config['arch']['file'])
     model = config.init_obj('arch', module_arch)
     logger.info(model)
 

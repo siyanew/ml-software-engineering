@@ -1,7 +1,10 @@
+import math
+
 import numpy as np
 import torch
-from base import BaseTrainer
 from torchvision.utils import make_grid
+
+from base import BaseTrainer
 from utils import MetricTracker, inf_loop
 
 
@@ -27,8 +30,8 @@ class Trainer(BaseTrainer):
         self.lr_scheduler = lr_scheduler
         self.log_step = int(np.sqrt(data_loader.batch_size))
 
-        self.train_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
-        self.valid_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
+        self.train_metrics = MetricTracker('loss', 'perplexity', writer=self.writer)
+        self.valid_metrics = MetricTracker('loss', 'perplexity', writer=self.writer)
 
     def _stepRNN(self, data, target, train=True):
 
@@ -40,9 +43,8 @@ class Trainer(BaseTrainer):
 
         # as the loss function only works on 2d inputs with 1d targets we need to flatten each of them with .view
         # we also don't want to measure the loss of the <sos> token, hence we slice off the first column of the
-        # output and
+        # output and target tensors
 
-        # target tensors
         # trg = [trg sent len, batch size]
         # output = [trg sent len, batch size, output dim]
         output = output[1:].view(-1, output.shape[-1])
@@ -90,15 +92,21 @@ class Trainer(BaseTrainer):
                     epoch,
                     self._progress(batch_idx),
                     loss.item()))
-                self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
+                # self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
 
             if batch_idx == self.len_epoch:
                 break
-        log = self.train_metrics.result()
+
+        # Track perplexity
+        self.train_metrics.update('perplexity', math.exp(self.train_metrics.get_avg('loss')))
+
+        log = dict()
+        train_log = self.train_metrics.result()
+        log.update(**{'Train ' + k: v for k, v in train_log.items()})
 
         if self.do_validation:
             val_log = self._valid_epoch(epoch)
-            log.update(**{'val_' + k: v for k, v in val_log.items()})
+            log.update(**{'Val. ' + k: v for k, v in val_log.items()})
 
         if self.lr_scheduler is not None:
             self.lr_scheduler.step()
@@ -130,6 +138,9 @@ class Trainer(BaseTrainer):
                 for met in self.metric_ftns:
                     self.valid_metrics.update(met.__name__, met(output, target))
                 self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
+
+        # Track perplexity
+        self.valid_metrics.update('perplexity', math.exp(self.valid_metrics.get_avg('loss')))
 
         # add histogram of model parameters to the tensorboard
         for name, p in self.model.named_parameters():

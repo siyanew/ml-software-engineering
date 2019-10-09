@@ -1,10 +1,12 @@
 import argparse
+import importlib
+
 import torch
 from tqdm import tqdm
+
 import data_loader.data_loaders as module_data
 import model.loss as module_loss
 import model.metric as module_metric
-import model.model as module_arch
 from parse_config import ConfigParser
 
 
@@ -27,7 +29,7 @@ def main(config):
         )
 
     # build model architecture
-    model = config.init_obj('arch', module_arch)
+    model = config.init_obj('arch')
     logger.info(model)
 
     # get function handles of loss and metrics
