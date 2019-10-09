@@ -1,0 +1,17 @@
+Current todos for commit message processing:
+    - Remove versions numbers / releases
+    - Remove remaining trailing punctuation
+
+"Prepare release package-0.1.2"
+469545
+469553
+
+Trailing punctuation:
+469261
+469254
+469716
+52093
+52082
+51658
+51584 (comma)
+51426
