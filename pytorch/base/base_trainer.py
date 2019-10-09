@@ -34,7 +34,7 @@ class BaseTrainer:
             self.mnt_mode = 'off'
             self.mnt_best = 0
         else:
-            self.mnt_mode, self.mnt_metric = self.monitor.split()
+            self.mnt_mode, self.mnt_metric = self.monitor.split(" ", maxsplit=1)
             assert self.mnt_mode in ['min', 'max']
 
             self.mnt_best = inf if self.mnt_mode == 'min' else -inf
@@ -77,7 +77,9 @@ class BaseTrainer:
             mins, secs = epoch_time(start_time, end_time)
             print(f'Epoch: {epoch:02} | Time: {mins}m {secs}s')
             for key, value in log.items():
-                self.logger.info(f'\t {str(key):15s} \t: {value:.3f}')
+                # Pretty print the output
+                set_name, metric = str(key).split('_')
+                self.logger.info(f'\t {set_name.capitalize():5s} {metric.capitalize():15s} \t: {value:.3f}')
 
             # evaluate model performance according to configured metric, save best checkpoint as model_best
             best = False

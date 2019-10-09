@@ -64,9 +64,4 @@ class MetricTracker:
         return self._data.average[key]
 
     def result(self):
-        # Pretty print output
-        result = dict()
-        for key, value in self._data.average.items():
-            result[key.capitalize()] = value
-
-        return result
+        return dict(self._data.average)
