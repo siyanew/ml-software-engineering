@@ -100,10 +100,17 @@ def _diff_line_filter_reduce(lines: List[str]) -> str:
     # Processing flags
     ignore_file = False
     in_block = False
+    block_lines = []
 
     for line in lines:
 
+        # New file marker
         if line[0:11] == 'diff --git ':
+
+            # Commit changes in last file
+            if block_lines:
+                result += block_lines
+                block_lines = []
 
             # Reset
             in_block = False
@@ -123,7 +130,7 @@ def _diff_line_filter_reduce(lines: List[str]) -> str:
             else:
 
                 # Retain just the filename for valid files
-                result.append(filename.lower())
+                block_lines.append(filename.lower())
 
         elif not ignore_file:
 
@@ -141,9 +148,9 @@ def _diff_line_filter_reduce(lines: List[str]) -> str:
                     # Discard empty lines
                     if change:
                         if line[0] == '-':
-                            result.append(f'{constants.PREPROCESS_DIFF_TOKEN_DEL} {change.lower()}')
+                            block_lines.append(f'{constants.PREPROCESS_DIFF_TOKEN_DEL} {change.lower()}')
                         elif line[0] == '+':
-                            result.append(f'{constants.PREPROCESS_DIFF_TOKEN_ADD} {change.lower()}')
+                            block_lines.append(f'{constants.PREPROCESS_DIFF_TOKEN_ADD} {change.lower()}')
 
             else:
 
@@ -158,7 +165,15 @@ def _diff_line_filter_reduce(lines: List[str]) -> str:
                     context = context.strip().rstrip('{,')
 
                     if context:  # Keep if not empty
-                        result.append(context.lower())
+                        block_lines.append(context.lower())
+
+    # Commit changes in last file
+    if block_lines:
+        result += block_lines
+
+    # Don't return anything for diffs that, after processing, are empty or only contain one changed filename
+    if len(result) <= 1:
+        return None
 
     # Generate output string
     return ' '.join(result)
