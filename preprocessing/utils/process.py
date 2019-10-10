@@ -20,7 +20,7 @@ def clean_commit_message(msg: str) -> str:
     Prepares commit message for the preliminary filter:
         - Removes whitespace.
         - Strips identifiers (#59)
-        - Strips labels ([label], label:)
+        - Strips labels ([label], label:)  TODO: maybe don't strip 'Added: this and that' constructions (so with verb)
     """
 
     msg = msg.strip()
