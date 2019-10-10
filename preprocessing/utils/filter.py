@@ -12,13 +12,9 @@ def filter_message_pre(msg: str) -> bool:
     """
     Decides whether or not to keep this commit message.
     Run on raw commit message, without any preprocessing.
-
-    Criteria:
-        - Message length too short
-        - 'Revert' or 'merge' commit
     """
 
-    # Discard short messages
+    # Filter on message length
     if len(msg) < constants.PREPROCESS_COMMIT_MSG_MIN_LEN:
         return False
 
@@ -62,7 +58,11 @@ def filter_message_post(tokens: List[Token], nlp: Language) -> bool:
     """
 
     # Discard if processing the message was unsuccessful
-    if not tokens or len(tokens) < 1:
+    if not tokens:
+        return False
+
+    # Discard if too few or many tokens
+    if not constants.PREPROCESS_COMMIT_MSG_MIN_TOKENS <= len(tokens) < constants.PREPROCESS_COMMIT_MSG_MAX_TOKENS:
         return False
 
     # Check if first word is a verb
@@ -72,11 +72,24 @@ def filter_message_post(tokens: List[Token], nlp: Language) -> bool:
     elif tokens[0].pos == NOUN:
 
         # Second check to handle incorrect PoS-tags for 'commit style' sentences
-        # E.g. Support setting this --> Support is classified as NOUN instead of VERB
+        # E.g. "Support setting this" --> "Support" is classified as NOUN instead of VERB
         # By prepending 'I ', the classification is correct
+        # TODO: find and check edge cases
         check = nlp('I ' + tokens_to_string(tokens))
 
         return True if check[1].pos == VERB else False
 
-    else:
+    return False
+
+
+def filter_diff_pre(diff: bytes) -> bool:
+    """
+    Decides whether or not to keep this diff.
+    Run on raw diff, without any preprocessing.
+    """
+
+    # Filter on diff size
+    if not constants.PREPROCESS_DIFF_MIN_BYTES <= len(diff) < constants.PREPROCESS_DIFF_MAX_BYTES:
         return False
+
+    return True

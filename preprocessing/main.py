@@ -1,4 +1,5 @@
 import pathlib
+import sys
 import time
 from typing import List
 
@@ -8,8 +9,8 @@ from spacy.tokens import Token
 
 from preprocessing import constants
 from preprocessing.utils.dataset import read_dataset
-from preprocessing.utils.filter import filter_message_pre, filter_message_post
-from preprocessing.utils.process import clean_commit_message, parse_commit_message
+from preprocessing.utils.filter import filter_message_pre, filter_message_post, filter_diff_pre
+from preprocessing.utils.process import clean_commit_message, parse_commit_message, clean_diff, parse_diff
 from preprocessing.utils.spacy import tokens_to_string
 
 import multiprocessing as mp
@@ -33,8 +34,26 @@ def process_commit(msg: str, nlp: Language):
     return tokens_to_string(tokens)
 
 
-def process_diff(diff: str):
-    return diff[:10]
+def process_diff(raw_diff: bytes):
+    # Preliminary diff filter
+    if not filter_diff_pre(raw_diff):
+        return None
+
+    diff: str = clean_diff(raw_diff)
+
+    if not diff:
+        return None
+
+    # Parse diff / tokenize (and cutoff at specified point)
+    tokens: List[str] = parse_diff(diff)
+
+    if not tokens:
+        return None
+
+    # Glue tokens back together
+    diff_str = ' '.join(tokens)
+
+    return diff_str
 
 
 def process_dataset(dataset: dict):
@@ -46,13 +65,13 @@ def process_dataset(dataset: dict):
 
     # Load spacy
     print("Loading SpaCy...")
-    nlp = spacy.load(constants.PREPROCESS_SPACY_LANGUAGE_MODEL, disable=["ner", "textcat"])
+    nlp = spacy.load(constants.SPACY_LANGUAGE_MODEL, disable=["ner", "textcat"])
 
     # Open write handlers for result files
     msg_results = p.joinpath(constants.DATASET + '.processed.msg')
     diff_results = p.joinpath(constants.DATASET + '.processed.diff')
-    fh_msg = msg_results.open('a', encoding=constants.DATASET_ENCODING)
-    fh_diff = diff_results.open('a', encoding=constants.DATASET_ENCODING)
+    fh_msg = msg_results.open('a', encoding=constants.OUTPUT_ENCODING)
+    fh_diff = diff_results.open('a', encoding=constants.OUTPUT_ENCODING)
 
     # Iterate over repositories (in commit messages folder)
     for repo, ids in dataset.items():
@@ -66,7 +85,7 @@ def process_dataset(dataset: dict):
         for entry in ids:
 
             # Process commit
-            with msg_path.joinpath(f'{entry}.msg').open('r', encoding=constants.DATASET_ENCODING) as f:
+            with msg_path.joinpath(f'{entry}.msg').open('r', encoding=constants.OUTPUT_ENCODING) as f:
                 msg = process_commit(f.read(), nlp)
 
             # Bail early if message cannot be processed
@@ -103,6 +122,34 @@ def process_dataset(dataset: dict):
     fh_msg.close()
 
 
+def _check_results_file(p: pathlib.Path, force=False) -> bool:
+    msg_results = p.joinpath(constants.DATASET + '.processed.msg')
+    diff_results = p.joinpath(constants.DATASET + '.processed.diff')
+
+    if (msg_results.exists() and msg_results.stat().st_size > 0) \
+            or (diff_results.exists() and diff_results.stat().st_size > 0):
+
+        if force:
+            msg_results.unlink()
+            diff_results.unlink()
+            return True
+
+        print("\nOne or more result files exist and are not empty.")
+        choice = input("Clear these files and continue? [y/N] ")
+
+        if choice.lower() == 'y':
+            msg_results.unlink()
+            diff_results.unlink()
+            print("\nFiles removed.")
+            return True
+        else:
+            print("\nNo changes have been made.")
+            return False
+
+    # Nothing on the hand
+    return True
+
+
 if __name__ == "__main__":
     """Preprocess commit + diff datasets."""
 
@@ -115,10 +162,17 @@ if __name__ == "__main__":
     print(f'Processing dataset "{constants.DATASET}" with {num_ids} commits')
     print(f'Firing up {num_processes} processes...')
 
+    # Check if results file is empty
+    if not _check_results_file(ds_path, force=constants.DEBUG):
+        print("Exiting...")
+        sys.exit(0)
+    else:
+        print("Continuing operation...\n")
+
     start_time = time.time()
 
     # Process dataset in parallel
     with mp.Pool(num_processes) as pool:
         pool.map(process_dataset, ds)
 
-    print(f"\n\nPreprocessing finished in {time.time() - start_time:.0f} seconds!")
+    print(f"\n\nPreprocessing finished in {time.time() - start_time:.1f} seconds!")

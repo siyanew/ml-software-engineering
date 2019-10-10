@@ -1,3 +1,4 @@
+import pathlib
 import re
 from typing import List
 
@@ -7,6 +8,8 @@ from spacy.tokens import Token
 from preprocessing import constants
 
 # Compiled regexes
+from preprocessing.utils.spacy import tokenize_diff
+
 re_git_id = re.compile(
     r'\s?(\((closing\s+)?\s?issue(s?)\s?|\(\s?)?#[0-9]+(\,\s?#[0-9]+)?\s?\)?')  # See: https://regex101.com/r/V1Scal/3
 re_label_colon = re.compile(r'^\w* ?\:')  # Matches "{{Label:}} commit message"
@@ -89,3 +92,93 @@ def parse_commit_message(msg: str, nlp: Language) -> List[Token]:
         return tokens
     except StopIteration:
         return None
+
+
+def _diff_line_filter_reduce(lines: List[str]) -> str:
+    result = []
+
+    # Processing flags
+    ignore_file = False
+    in_block = False
+
+    for line in lines:
+
+        if line[0:11] == 'diff --git ':
+
+            # Reset
+            in_block = False
+            ignore_file = False
+
+            # Parse line for file extension
+            path = pathlib.PurePosixPath(line[11:].partition(' ')[0])
+
+            filename = path.name
+            filetype = path.suffix[1:]
+
+            if filetype not in constants.PREPROCESS_DIFF_KEEP_EXTENSIONS:
+
+                # Ignore unsupported files
+                ignore_file = True
+
+            else:
+
+                # Retain just the filename for valid files
+                result.append(filename.lower())
+
+        elif not ignore_file:
+
+            # Skip empty lines
+            if not line:
+                continue
+
+            if in_block:
+
+                # Process changes/additions
+                if line[0] == '-':
+                    result.append(f'{constants.PREPROCESS_DIFF_TOKEN_DEL} {line[1:].lower()}')
+                elif line[0] == '+':
+                    result.append(f'{constants.PREPROCESS_DIFF_TOKEN_ADD} {line[1:].lower()}')
+
+            else:
+
+                # Process block starts
+                if line[0:2] == '@@':
+                    in_block = True
+
+                    # Get context of block (if any)
+                    context = line[2:].partition('@@')[-1]
+
+                    # Remove trailing accolade
+                    context = context.rstrip('{, ')
+
+                    result.append(context.lower())
+
+    return ' '.join(result)
+
+
+def clean_diff(diff_raw: bytes) -> str:
+    try:
+
+        # Decode byte stream
+        lines = diff_raw.decode().split('\n')
+
+        # Process and fiter lines in diff
+        return _diff_line_filter_reduce(lines)
+
+    except UnicodeDecodeError as e:
+        print('\n')
+        print(diff_raw)
+        print('\n')
+        raise e
+
+    return None
+
+
+def parse_diff(diff: str) -> List[str]:
+    # Split diff into tokens
+    tokens: List[str] = tokenize_diff(diff)
+
+    # Limit the number of tokens in diff
+    tokens = tokens[:constants.PREPROCESS_DIFF_NUM_TOKEN_CUTOFF]
+
+    return tokens
