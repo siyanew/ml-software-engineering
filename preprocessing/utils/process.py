@@ -134,10 +134,16 @@ def _diff_line_filter_reduce(lines: List[str]) -> str:
             if in_block:
 
                 # Process changes/additions
-                if line[0] == '-':
-                    result.append(f'{constants.PREPROCESS_DIFF_TOKEN_DEL} {line[1:].lower()}')
-                elif line[0] == '+':
-                    result.append(f'{constants.PREPROCESS_DIFF_TOKEN_ADD} {line[1:].lower()}')
+                if line[0] in '+-':
+
+                    change = line[1:].strip()
+
+                    # Discard empty lines
+                    if change:
+                        if line[0] == '-':
+                            result.append(f'{constants.PREPROCESS_DIFF_TOKEN_DEL} {change.lower()}')
+                        elif line[0] == '+':
+                            result.append(f'{constants.PREPROCESS_DIFF_TOKEN_ADD} {change.lower()}')
 
             else:
 
@@ -148,11 +154,13 @@ def _diff_line_filter_reduce(lines: List[str]) -> str:
                     # Get context of block (if any)
                     context = line[2:].partition('@@')[-1]
 
-                    # Remove trailing accolade
-                    context = context.rstrip('{, ')
+                    # Remove whitespace and trailing accolades / commas
+                    context = context.strip().rstrip('{,')
 
-                    result.append(context.lower())
+                    if context:  # Keep if not empty
+                        result.append(context.lower())
 
+    # Generate output string
     return ' '.join(result)
 
 
