@@ -1,7 +1,9 @@
 import pathlib
+import numpy as np
+from typing import List
 
 
-def load_dataset(path_to_dataset: pathlib.Path) -> (dict, int):
+def read_dataset(path_to_dataset: pathlib.Path, num_partitions=1) -> (dict, int):
     """
     Parses the dataset file tree and constructs work map.
     Ignores (commit,diff) pairs with any missing files.
@@ -29,8 +31,9 @@ def load_dataset(path_to_dataset: pathlib.Path) -> (dict, int):
     """
 
     # Init return values
-    structure = dict()
-    num_commits = 0
+    partitions: List[int] = [0] * num_partitions
+    data: List[dict] = [dict() for i in range(num_partitions)]
+    total_commits: int = 0
 
     # Read repos from msg dir
     for folder in path_to_dataset.joinpath('msg').iterdir():
@@ -52,8 +55,21 @@ def load_dataset(path_to_dataset: pathlib.Path) -> (dict, int):
             if diff_path.joinpath(ID + '.diff').exists():
                 ids.append(ID)
 
+        # Store repo in correct partition
         if ids:
-            structure[repo] = ids
-            num_commits += len(ids)
+            num_ids = len(ids)
 
-    return structure, num_commits
+            # Select partition to add this repo to
+            part_idx = _select_partition(num_ids, partitions)
+            data[part_idx][repo] = ids
+
+            # Bookkeeping
+            partitions[part_idx] += num_ids
+            total_commits += num_ids
+
+    return data, total_commits
+
+
+def _select_partition(num: int, partitions: List[int]) -> int:
+    # For now just greedy select partition with least items
+    return np.argmin(partitions)
