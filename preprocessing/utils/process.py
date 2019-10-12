@@ -4,6 +4,7 @@ import re
 from typing import List
 
 from spacy.language import Language
+from spacy.symbols import PUNCT
 from spacy.tokens import Token
 
 from preprocessing import constants
@@ -17,6 +18,7 @@ re_label_colon = re.compile(r'^\w* ?\:')  # Matches "{{Label:}} commit message"
 re_mention = re.compile(
     r"((thanks\s?)(\s?to\s?)?)?\@[a-z0-9']+\s?[.,!]*")  # Matches user mentions combined with 'thanks'
 re_url = re.compile(r"((git|ssh|http(s)?)|(git@[\w\.]+))(:(//)?)([\w\.@\:/\-~#'?,+]+)(\.git)?(/)?")  # Matches urls
+re_no_english = re.compile(r'[^\sa-zA-Z0-9.!"#$%&\'()*+,-./:;<=>?@[\]^_`{|}~]')  # From ptrgn-commit-msg project
 
 
 def clean_commit_message(msg: str) -> str:
@@ -46,6 +48,9 @@ def clean_commit_message(msg: str) -> str:
     # Remove URLs
     msg = re_url.sub('', msg)
 
+    # Remove "non-English" characters
+    msg = re_no_english.sub('', msg)
+
     # Remove any remaining starting and trailing whitespace
     msg = msg.strip()
 
@@ -60,8 +65,6 @@ def parse_commit_message(msg: str, nlp: Language) -> List[Token]:
 
     # Run full SpaCy pipeline on message
     doc = nlp(msg)
-
-    # TODO: add special tokens for language constructs (e.g. ==, +=, etc.)
 
     try:
 
@@ -85,8 +88,8 @@ def parse_commit_message(msg: str, nlp: Language) -> List[Token]:
             return []
 
         # Remove trailing punctuation
-        if tokens[-1].string in '.?!;:':
-            tokens = tokens[0:-1]
+        if tokens[-1].text in ".?!;:":
+            del tokens[-1]
 
         return tokens
     except StopIteration:
@@ -159,6 +162,9 @@ def _reduce_diff(lines: List[str]) -> (str, dict):
 
                     change = line[1:].strip()
 
+                    # Remove "non-English" characters
+                    change = re_no_english.sub('', change)
+
                     # Discard empty lines
                     if change:
                         if line[0] == '-':
@@ -181,6 +187,9 @@ def _reduce_diff(lines: List[str]) -> (str, dict):
 
                     # Remove whitespace and trailing accolades / commas
                     context = context.strip().rstrip('{,')
+
+                    # Remove "non-English" characters
+                    context = re_no_english.sub('', context)
 
                     if context:  # Keep if not empty
                         block_lines.append(context.lower())

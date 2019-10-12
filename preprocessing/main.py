@@ -12,7 +12,7 @@ from preprocessing import constants
 from preprocessing.utils.dataset import read_dataset
 from preprocessing.utils.filter import filter_message_pre, filter_message_post, filter_diff_pre
 from preprocessing.utils.process import clean_commit_message, parse_commit_message, clean_diff, parse_diff
-from preprocessing.utils.spacy import tokens_to_string
+from preprocessing.utils.spacy import tokens_to_string, _add_special_tokenizer_cases
 
 import multiprocessing as mp
 
@@ -69,6 +69,7 @@ def process_dataset(dataset: dict):
     # Load spacy
     print("Loading SpaCy...")
     nlp = spacy.load(constants.SPACY_LANGUAGE_MODEL, disable=["ner", "textcat"])
+    _add_special_tokenizer_cases(nlp)
 
     # Open write handlers for result files
     fh_msg = p.joinpath(constants.DATASET + '.processed.msg').open('a', encoding=constants.OUTPUT_ENCODING)
@@ -101,11 +102,6 @@ def process_dataset(dataset: dict):
                     data = f.read()
                     diff, meta = process_diff(data)
 
-                    if meta:  # No metadata if commit filtered by preliminary filter
-                        # Dump metadata
-                        meta['ext_count'] = dict(meta['ext_count'])  # Can't serialize defaultdict
-                        fh_diff_meta.write(f'{str(orjson.dumps(meta), constants.OUTPUT_ENCODING)}\n')
-
                 except UnicodeDecodeError:
                     print(f)  # TODO: investigate, for now fixed by reading raw bytes ('rb' flags)
                     raise
@@ -114,15 +110,18 @@ def process_dataset(dataset: dict):
             if not diff:
                 continue
 
-            # Write results to file
-            if msg and diff:
+            if meta:  # No metadata if commit filtered by preliminary filter
+                # Dump metadata
+                meta['ext_count'] = dict(meta['ext_count'])  # Can't serialize defaultdict
+                fh_diff_meta.write(f'{str(orjson.dumps(meta), constants.OUTPUT_ENCODING)}\n')
 
-                if constants.DEBUG:
-                    fh_msg.write(f'{entry}: {msg}\n')
-                    fh_diff.write(f'{entry}: {diff}\n')
-                else:
-                    fh_msg.write(f'{msg}\n')
-                    fh_diff.write(f'{diff}\n')
+            # Write results to file
+            if constants.DEBUG:
+                fh_msg.write(f'{entry}: {msg}\n')
+                fh_diff.write(f'{entry}: {diff}\n')
+            else:
+                fh_msg.write(f'{msg}\n')
+                fh_diff.write(f'{diff}\n')
 
         print(f'Finished processing "{repo}" in {time.time() - repo_time_start:.1f}s ({len(ids)} commits)')
 
@@ -135,13 +134,16 @@ def process_dataset(dataset: dict):
 def _check_results_file(p: pathlib.Path, force=False) -> bool:
     msg_results = p.joinpath(constants.DATASET + '.processed.msg')
     diff_results = p.joinpath(constants.DATASET + '.processed.diff')
+    diff_results_meta = p.joinpath(constants.DATASET + '.diff.meta.jsonl')
 
     if (msg_results.exists() and msg_results.stat().st_size > 0) \
-            or (diff_results.exists() and diff_results.stat().st_size > 0):
+            or (diff_results.exists() and diff_results.stat().st_size > 0) \
+            or (diff_results_meta.exists() and diff_results_meta.stat().st_size > 0):
 
         if force:
             msg_results.unlink()
             diff_results.unlink()
+            diff_results_meta.unlink()
             return True
 
         print("\nOne or more result files exist and are not empty.")
@@ -150,6 +152,7 @@ def _check_results_file(p: pathlib.Path, force=False) -> bool:
         if choice.lower() == 'y':
             msg_results.unlink()
             diff_results.unlink()
+            diff_results_meta.unlink()
             print("\nFiles removed.")
             return True
         else:
