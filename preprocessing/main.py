@@ -2,6 +2,7 @@ import pathlib
 import sys
 import time
 from typing import List
+import orjson
 
 import spacy
 from spacy.language import Language
@@ -39,23 +40,23 @@ def process_commit(msg: str, nlp: Language):
 def process_diff(raw_diff: bytes):
     # Preliminary diff filter
     if not filter_diff_pre(raw_diff):
-        return None
+        return None, None
 
-    diff: str = clean_diff(raw_diff)
+    diff, meta = clean_diff(raw_diff)
 
     if not diff:
-        return None
+        return None, meta
 
     # Parse diff / tokenize (and cutoff at specified point)
-    tokens: List[str] = parse_diff(diff)
+    tokens, meta = parse_diff(diff, meta)
 
     if not tokens:
-        return None
+        return None, meta
 
     # Glue tokens back together
     diff_str = ' '.join(tokens)
 
-    return diff_str
+    return diff_str, meta
 
 
 def process_dataset(dataset: dict):
@@ -70,10 +71,9 @@ def process_dataset(dataset: dict):
     nlp = spacy.load(constants.SPACY_LANGUAGE_MODEL, disable=["ner", "textcat"])
 
     # Open write handlers for result files
-    msg_results = p.joinpath(constants.DATASET + '.processed.msg')
-    diff_results = p.joinpath(constants.DATASET + '.processed.diff')
-    fh_msg = msg_results.open('a', encoding=constants.OUTPUT_ENCODING)
-    fh_diff = diff_results.open('a', encoding=constants.OUTPUT_ENCODING)
+    fh_msg = p.joinpath(constants.DATASET + '.processed.msg').open('a', encoding=constants.OUTPUT_ENCODING)
+    fh_diff = p.joinpath(constants.DATASET + '.processed.diff').open('a', encoding=constants.OUTPUT_ENCODING)
+    fh_diff_meta = p.joinpath(constants.DATASET + '.diff.meta.jsonl').open('a', encoding=constants.OUTPUT_ENCODING)
 
     # Iterate over repositories (in commit messages folder)
     for repo, ids in dataset.items():
@@ -99,7 +99,13 @@ def process_dataset(dataset: dict):
 
                 try:
                     data = f.read()
-                    diff = process_diff(data)
+                    diff, meta = process_diff(data)
+
+                    if meta:  # No metadata if commit filtered by preliminary filter
+                        # Dump metadata
+                        meta['ext_count'] = dict(meta['ext_count'])  # Can't serialize defaultdict
+                        fh_diff_meta.write(f'{str(orjson.dumps(meta), constants.OUTPUT_ENCODING)}\n')
+
                 except UnicodeDecodeError:
                     print(f)  # TODO: investigate, for now fixed by reading raw bytes ('rb' flags)
                     raise
@@ -120,8 +126,10 @@ def process_dataset(dataset: dict):
 
         print(f'Finished processing "{repo}" in {time.time() - repo_time_start:.1f}s ({len(ids)} commits)')
 
-    # Close results file handler
+    # Close result file handlers
     fh_msg.close()
+    fh_diff.close()
+    fh_diff_meta.close()
 
 
 def _check_results_file(p: pathlib.Path, force=False) -> bool:

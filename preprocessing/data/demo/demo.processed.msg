@@ -1,1 +1,1 @@
-1: support setting client name for jediscluster
+support setting client name for jediscluster

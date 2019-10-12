@@ -1,3 +1,4 @@
+import collections
 import pathlib
 import re
 from typing import List
@@ -92,7 +93,7 @@ def parse_commit_message(msg: str, nlp: Language) -> List[Token]:
         return None
 
 
-def _diff_line_filter_reduce(lines: List[str]) -> str:
+def _reduce_diff(lines: List[str]) -> (str, dict):
     result = []
 
     # Processing flags
@@ -100,10 +101,23 @@ def _diff_line_filter_reduce(lines: List[str]) -> str:
     in_block = False
     block_lines = []
 
+    # Metadata
+    meta = {
+        'total_lines': len(lines),
+        'lines_kept': 0,
+        'additions': 0,
+        'deletions': 0,
+        'file_count': 0,
+        'block_count': 0,
+        'ext_count': collections.defaultdict(int)
+    }
+
     for line in lines:
 
         # New file marker
         if line[0:11] == 'diff --git ':
+
+            meta['file_count'] += 1
 
             # Commit changes in last file
             if block_lines:
@@ -127,6 +141,8 @@ def _diff_line_filter_reduce(lines: List[str]) -> str:
 
             else:
 
+                meta['ext_count'][filetype] += 1
+
                 # Retain just the filename for valid files
                 block_lines.append(filename.lower())
 
@@ -146,8 +162,10 @@ def _diff_line_filter_reduce(lines: List[str]) -> str:
                     # Discard empty lines
                     if change:
                         if line[0] == '-':
+                            meta['deletions'] += 1
                             block_lines.append(f'{constants.PREPROCESS_DIFF_TOKEN_DEL} {change.lower()}')
                         elif line[0] == '+':
+                            meta['additions'] += 1
                             block_lines.append(f'{constants.PREPROCESS_DIFF_TOKEN_ADD} {change.lower()}')
 
             else:
@@ -155,6 +173,8 @@ def _diff_line_filter_reduce(lines: List[str]) -> str:
                 # Process block starts
                 if line[0:2] == '@@':
                     in_block = True
+
+                    meta['block_count'] += 1
 
                     # Get context of block (if any)
                     context = line[2:].partition('@@')[-1]
@@ -169,37 +189,38 @@ def _diff_line_filter_reduce(lines: List[str]) -> str:
     if block_lines:
         result += block_lines
 
+    meta['lines_kept'] = len(result)
+
     # Don't return anything for diffs that, after processing, are empty or only contain one changed filename
-    if len(result) <= 1:
-        return None
+    result_str = ' '.join(result) if len(result) > 0 else None
 
-    # Generate output string
-    return ' '.join(result)
+    return result_str, meta
 
 
-def clean_diff(diff_raw: bytes) -> str:
+def clean_diff(diff_raw: bytes) -> (str, dict):
     try:
 
         # Decode byte stream
         lines = diff_raw.decode().split('\n')
 
         # Process and fiter lines in diff
-        return _diff_line_filter_reduce(lines)
+        return _reduce_diff(lines)
 
     except UnicodeDecodeError as e:
+        # TODO: handle this gracefully
         print('\n')
         print(diff_raw)
         print('\n')
         raise e
 
-    return None
 
-
-def parse_diff(diff: str) -> List[str]:
+def parse_diff(diff: str, meta: dict) -> (List[str], dict):
     # Split diff into tokens
     tokens: List[str] = tokenize_diff(diff)
+
+    meta['total_tokens'] = len(tokens) if tokens else 0
 
     # Limit the number of tokens in diff
     tokens = tokens[:constants.PREPROCESS_DIFF_NUM_TOKEN_CUTOFF]
 
-    return tokens
+    return tokens, meta
