@@ -17,12 +17,14 @@ import multiprocessing as mp
 
 
 def process_commit(msg: str, nlp: Language):
-    # Clean commit message (remove whitespace, labels, ids, etc.)
-    msg = clean_commit_message(msg)
+    msg = msg.strip()
 
     # Preliminary filter (discard rollback/merge commits, etc.)
     if not filter_message_pre(msg):
         return None
+
+    # Clean commit message (remove whitespace, labels, ids, etc.)
+    msg = clean_commit_message(msg)
 
     # Process commit message (split first sentence, NLP, etc.)
     tokens: List[Token] = parse_commit_message(msg, nlp)

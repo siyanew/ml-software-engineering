@@ -11,7 +11,7 @@ from preprocessing.utils.spacy import tokens_to_string
 def filter_message_pre(msg: str) -> bool:
     """
     Decides whether or not to keep this commit message.
-    Run on raw commit message, without any preprocessing.
+    Run on raw commit message, without any preprocessing (just str.strip()).
     """
 
     # Filter on message length
@@ -31,22 +31,10 @@ def filter_message_pre(msg: str) -> bool:
         return False
 
     # Check for 'git merge' commits
-    # Pattern: Merge branch '(.*)'[(.*)]
-    # Pattern: Merge pull request #(.*)
-    # Examples:
-    #   Merge branch 'master' into devel
-    #   Merge branch 'docs'
-    #   Merge pull request #1998 from rossabaker/merge-0.18.16
-    #   Merge pull request #1 from infamousmammal/readme-edits
-    #   Merge branch 'master' of https://github.com/phorcys/Taiwu_mods
-    # N.B.: Commit msg does not necessarily have to start with these words! Some repos prepend some IDs.
-    if msg.startswith("Merge:"):
+    #   Merge branch '(.*)'[(.*)]
+    #   Merge pull request #(.*)
+    if "Merge branch" in msg or "Merge pull request" in msg:
         return False
-
-    if msg.find("Merge branch '") >= 0 or msg.find("Merge pull request #") >= 0:
-        return False
-
-    # TODO: Filter non-English commit messages
 
     return True
 

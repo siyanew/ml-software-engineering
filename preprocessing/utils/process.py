@@ -26,8 +26,6 @@ def clean_commit_message(msg: str) -> str:
         - Strips labels ([label], label:)  TODO: maybe don't strip 'Added: this and that' constructions (so with verb)
     """
 
-    msg = msg.strip()
-
     # Discard everything after the first line
     msg = msg.partition('\n')[0]
 
