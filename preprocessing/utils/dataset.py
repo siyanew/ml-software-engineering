@@ -28,6 +28,7 @@ def read_dataset(path_to_dataset: pathlib.Path, num_partitions=1) -> (dict, int)
                 - repoN
 
     TODO: implement mechanism to skip already processed repos and commits
+    TODO: current implementation very slow on large datasets
     """
 
     # Init return values

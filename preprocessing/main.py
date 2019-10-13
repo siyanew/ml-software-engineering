@@ -100,14 +100,8 @@ def process_dataset(dataset: dict):
 
             # Process diff
             with diff_path.joinpath(f'{entry}.diff').open('rb') as f:
-
-                try:
-                    data = f.read()
-                    diff, meta = process_diff(data)
-
-                except UnicodeDecodeError:
-                    print(f)  # TODO: investigate, for now fixed by reading raw bytes ('rb' flags)
-                    raise
+                data = f.read()
+                diff, meta = process_diff(data)
 
             # Bail if diff cannot be processed
             if not diff:
