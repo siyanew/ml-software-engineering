@@ -1,9 +1,10 @@
 import spacy
 import torch
-from base import BaseDataLoader
 from torchtext.data import BucketIterator, Field
 from torchtext.datasets import Multi30k
 from torchvision import datasets as vdatasets, transforms
+
+from base import BaseDataLoader
 
 
 class MnistDataLoader(BaseDataLoader):
@@ -22,11 +23,17 @@ class MnistDataLoader(BaseDataLoader):
 
 
 class LanguageDataLoader:
-    def __init__(self, data_dir, batch_sizes):
+    def __init__(self, data_dir, reverse_src, batch_sizes):
         spacy_de = spacy.load('de')
         spacy_en = spacy.load('de')
 
         def tokenize_de(text):
+            """
+            Tokenizes German text from a string into a list of strings (tokens)
+            """
+            return [tok.text for tok in spacy_de.tokenizer(text)]
+
+        def tokenize_de_reverse(text):
             """
             Tokenizes German text from a string into a list of strings (tokens) and reverses it
             """
@@ -38,10 +45,16 @@ class LanguageDataLoader:
             """
             return [tok.text for tok in spacy_en.tokenizer(text)]
 
-        SRC = Field(tokenize=tokenize_de,
-                    init_token='<sos>',
-                    eos_token='<eos>',
-                    lower=True)
+        if reverse_src:
+            SRC = Field(tokenize=tokenize_de_reverse,
+                        init_token='<sos>',
+                        eos_token='<eos>',
+                        lower=True)
+        else:
+            SRC = Field(tokenize=tokenize_de,
+                        init_token='<sos>',
+                        eos_token='<eos>',
+                        lower=True)
 
         TRG = Field(tokenize=tokenize_en,
                     init_token='<sos>',

@@ -19,6 +19,7 @@
     "iterator": true,
     "args": {
       "data_dir": "data/multi30k",
+      "reverse_src": false,
       "batch_sizes": [
         128,
         128,
