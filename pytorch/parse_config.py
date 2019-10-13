@@ -31,6 +31,7 @@ class ConfigParser:
             run_id = datetime.now().strftime(r'%m%d_%H%M%S')
         self._save_dir = save_dir / 'models' / exper_name / run_id
         self._log_dir = save_dir / 'log' / exper_name / run_id
+        self._log_dir_test = save_dir / 'test_log' / exper_name / run_id
 
         # make directory for saving checkpoints and log.
         exist_ok = run_id == ''
@@ -139,6 +140,11 @@ class ConfigParser:
     @property
     def log_dir(self):
         return self._log_dir
+
+    @property
+    def log_dir_test(self):
+        return self._log_dir_test
+
 
 # helper functions to update config dict with custom cli options
 def _update_config(config, modification):
