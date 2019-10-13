@@ -18,6 +18,10 @@ torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 np.random.seed(SEED)
 
+# Fix GPU problems by first calling current_device()
+# https://github.com/pytorch/pytorch/issues/17108
+torch.cuda.current_device()
+
 
 def main(config):
     logger = config.get_logger('train')
@@ -42,6 +46,11 @@ def main(config):
     # set the padding index in the criterion such that we ignore pad tokens
     if config['loss']['padding_idx']:
         criterion = criterion(data_loader.TRG.vocab.stoi['<pad>'])
+
+    if 'packed' in config['arch'] and config['arch']['packed']:
+        model.set_tokens(data_loader.SRC.vocab.stoi['<pad>'],
+                         data_loader.TRG.vocab.stoi['<sos>'],
+                         data_loader.TRG.vocab.stoi['<eos>'])
 
     metrics = [getattr(module_metric, met) for met in config['metrics']]
 

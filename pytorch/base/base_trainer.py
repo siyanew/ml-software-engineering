@@ -1,8 +1,9 @@
 import time
+from abc import abstractmethod
 
 import torch
-from abc import abstractmethod
 from numpy import inf
+
 from logger import TensorboardWriter
 
 
@@ -10,6 +11,7 @@ class BaseTrainer:
     """
     Base class for all trainers
     """
+
     def __init__(self, model, criterion, metric_ftns, optimizer, config):
         self.config = config
         self.logger = config.get_logger('trainer', config['trainer']['verbosity'])
@@ -136,12 +138,12 @@ class BaseTrainer:
         """
         arch = type(self.model).__name__
         state = {
-            'arch': arch,
-            'epoch': epoch,
-            'state_dict': self.model.state_dict(),
-            'optimizer': self.optimizer.state_dict(),
+            'arch':         arch,
+            'epoch':        epoch,
+            'state_dict':   self.model.state_dict(),
+            'optimizer':    self.optimizer.state_dict(),
             'monitor_best': self.mnt_best,
-            'config': self.config
+            'config':       self.config
         }
         filename = str(self.checkpoint_dir / 'checkpoint-epoch{}.pth'.format(epoch))
         torch.save(state, filename)
@@ -177,6 +179,7 @@ class BaseTrainer:
             self.optimizer.load_state_dict(checkpoint['optimizer'])
 
         self.logger.info("Checkpoint loaded. Resume training from epoch {}".format(self.start_epoch))
+
 
 def epoch_time(start_time, end_time):
     elapsed_time = end_time - start_time

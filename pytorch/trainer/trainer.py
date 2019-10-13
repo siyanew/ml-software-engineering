@@ -2,7 +2,6 @@ import math
 
 import numpy as np
 import torch
-from torchvision.utils import make_grid
 
 from base import BaseTrainer
 from utils import MetricTracker, inf_loop
@@ -33,13 +32,22 @@ class Trainer(BaseTrainer):
         self.train_metrics = MetricTracker('loss', 'perplexity', writer=self.writer)
         self.valid_metrics = MetricTracker('loss', 'perplexity', writer=self.writer)
 
-    def _stepRNN(self, data, target, train=True):
+        if 'packed' in config['arch'] and config['arch']['packed']:
+            self.step = self._packed_step
+        else:
+            self.step = self._step
 
+    def _step(self, batch, train=True):
+        # Note this only works for the BucketIterator, and not for torch Dataloaders
+        src = batch.src
+        target = batch.trg
+
+        src, target = src.to(self.device), target.to(self.device)
         if train:
-            output = self.model(data, target)
+            output = self.model(src, target)
         else:
             # Turn of teacher forcing
-            output = self.model(data, target, 0)
+            output = self.model(src, target, teacher_forcing_ratio=0)
 
         # as the loss function only works on 2d inputs with 1d targets we need to flatten each of them with .view
         # we also don't want to measure the loss of the <sos> token, hence we slice off the first column of the
@@ -55,6 +63,29 @@ class Trainer(BaseTrainer):
 
         return output, target
 
+    def _packed_step(self, batch, train=True):
+        src, src_len = batch.src
+        trg = batch.trg
+
+        src, src_len = src.to(self.device), src_len.to(self.device)
+        trg = trg.to(self.device)
+
+        if train:
+            output, attention = self.model(src, src_len, trg)
+        else:
+            output, attention = self.model(src, src_len, trg, teacher_forcing_ratio=0)
+
+        # trg = [trg sent len, batch size]
+        # output = [trg sent len, batch size, output dim]
+
+        output = output[1:].view(-1, output.shape[-1])
+        trg = trg[1:].view(-1)
+
+        # trg = [(trg sent len - 1) * batch size]
+        # output = [(trg sent len - 1) * batch size, output dim]
+
+        return output, trg
+
     def _train_epoch(self, epoch):
         """
         Training logic for an epoch
@@ -65,14 +96,9 @@ class Trainer(BaseTrainer):
         self.model.train()
         self.train_metrics.reset()
         for batch_idx, batch in enumerate(self.data_loader):
-            # Note this only works for the BucketIterator, and not for torch Dataloaders
-            data = batch.src
-            target = batch.trg
-
-            data, target = data.to(self.device), target.to(self.device)
 
             self.optimizer.zero_grad()
-            output, target = self._stepRNN(data, target)
+            output, target = self.step(batch)
 
             loss = self.criterion(output, target)
             loss.backward()
@@ -123,13 +149,7 @@ class Trainer(BaseTrainer):
         self.valid_metrics.reset()
         with torch.no_grad():
             for batch_idx, batch in enumerate(self.valid_data_loader):
-                # Note this only works for the BucketIterator, and not for torch Dataloaders
-                data = batch.src
-                target = batch.trg
-
-                data, target = data.to(self.device), target.to(self.device)
-
-                output, target = self._stepRNN(data, target, train=False)
+                output, target = self.step(batch, train=False)
 
                 loss = self.criterion(output, target)
 
@@ -137,7 +157,7 @@ class Trainer(BaseTrainer):
                 self.valid_metrics.update('loss', loss.item())
                 for met in self.metric_ftns:
                     self.valid_metrics.update(met.__name__, met(output, target))
-                self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
+                # self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
 
         # Track perplexity
         self.valid_metrics.update('perplexity', math.exp(self.valid_metrics.get_avg('loss')))

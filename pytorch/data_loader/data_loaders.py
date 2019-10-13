@@ -92,3 +92,82 @@ class LanguageDataLoader:
 
     def split_test(self):
         return self.test_iterator
+
+
+class PackedLanguageDataLoader:
+    def __init__(self, data_dir, reverse_src, batch_sizes):
+        spacy_de = spacy.load('de')
+        spacy_en = spacy.load('de')
+
+        def tokenize_de(text):
+            """
+            Tokenizes German text from a string into a list of strings (tokens)
+            """
+            return [tok.text for tok in spacy_de.tokenizer(text)]
+
+        def tokenize_de_reverse(text):
+            """
+            Tokenizes German text from a string into a list of strings (tokens) and reverses it
+            """
+            return [tok.text for tok in spacy_de.tokenizer(text)][::-1]
+
+        def tokenize_en(text):
+            """
+            Tokenizes English text from a string into a list of strings (tokens)
+            """
+            return [tok.text for tok in spacy_en.tokenizer(text)]
+
+        if reverse_src:
+            SRC = Field(tokenize=tokenize_de_reverse,
+                        init_token='<sos>',
+                        eos_token='<eos>',
+                        include_lengths=True,
+                        lower=True)
+        else:
+            SRC = Field(tokenize=tokenize_de,
+                        init_token='<sos>',
+                        eos_token='<eos>',
+                        include_lengths=True,
+                        lower=True)
+
+        TRG = Field(tokenize=tokenize_en,
+                    init_token='<sos>',
+                    eos_token='<eos>',
+                    lower=True)
+
+        train_data, valid_data, test_data = Multi30k.splits(exts=('.de', '.en'),
+                                                            fields=(SRC, TRG),
+                                                            root=data_dir
+                                                            )
+        print(f"Number of training examples: {len(train_data.examples)}")
+        print(f"Number of validation examples: {len(valid_data.examples)}")
+        print(f"Number of testing examples: {len(test_data.examples)}")
+        SRC.build_vocab(train_data, min_freq=2)
+        TRG.build_vocab(train_data, min_freq=2)
+        print(f"Unique tokens in source (de) training vocabulary: {len(SRC.vocab)}")
+        print(f"Unique tokens in target (en) training vocabulary: {len(TRG.vocab)}")
+
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        # bucketing (minimizes the amount of padding by grouping similar length sentences)
+        # sort the sequences based on their non-padded length
+        train_iterator, valid_iterator, test_iterator = BucketIterator.splits(
+            (train_data, valid_data, test_data),
+            batch_sizes=batch_sizes,
+            sort_within_batch=True,
+            sort_key=lambda x: len(x.src),
+            device=device)
+
+        self.SRC = SRC
+        self.TRG = TRG
+        self.valid_iterator = valid_iterator
+        self.train_iterator = train_iterator
+        self.test_iterator = test_iterator
+
+    def split_validation(self):
+        return self.valid_iterator
+
+    def split_train(self):
+        return self.train_iterator
+
+    def split_test(self):
+        return self.test_iterator
