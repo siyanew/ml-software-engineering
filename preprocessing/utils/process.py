@@ -4,10 +4,10 @@ import re
 from typing import List
 
 from spacy.language import Language
-from spacy.symbols import PUNCT
 from spacy.tokens import Token
 
 from preprocessing import constants
+from preprocessing.utils.spacy import is_sha1
 
 # Compiled regexes
 from preprocessing.utils.spacy import tokenize_diff
@@ -78,8 +78,21 @@ def parse_commit_message(msg: str, nlp: Language) -> List[Token]:
 
         # Generate a list of tokens we want to keep
         for token in span:
+
+            # Remove unwanted PoS-tags
             if token.pos in constants.PREPROCESS_IGNORE_POS:
                 continue
+
+            # Remove commit hashes
+            if is_sha1(token.text):
+                continue
+
+            # Replace version numbers
+            # TODO: may want to match more complex version numbers (like 1.2.3-RC.1), but that would be more suitable
+            # in an earlier stage of preprocessing.
+            if token.shape_ in ['d.d.d', 'd.d']:
+                token.lemma_ = constants.PREPROCESS_DIFF_TOKEN_VERSION
+                token.norm_ = constants.PREPROCESS_DIFF_TOKEN_VERSION
 
             tokens.append(token)
 

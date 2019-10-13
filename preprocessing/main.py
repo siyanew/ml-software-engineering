@@ -68,8 +68,11 @@ def process_dataset(dataset: dict):
 
     # Load spacy
     print("Loading SpaCy...")
+    # using_gpu = spacy.prefer_gpu()
+    using_gpu = False
     nlp = spacy.load(constants.SPACY_LANGUAGE_MODEL, disable=["ner", "textcat"])
     _add_special_tokenizer_cases(nlp)
+    print("Using GPU: {}".format(using_gpu))
 
     # Open write handlers for result files
     fh_msg = p.joinpath(constants.DATASET + '.processed.msg').open('a', encoding=constants.OUTPUT_ENCODING)
@@ -166,7 +169,9 @@ def _check_results_file(p: pathlib.Path, force=False) -> bool:
 if __name__ == "__main__":
     """Preprocess commit + diff datasets."""
 
-    num_processes = mp.cpu_count()
+    print("Started preprocessing script. Calculating dataset size...")
+
+    num_processes = mp.cpu_count() if not constants.DEBUG else 1
 
     # Read dataset structure
     ds_path = pathlib.Path(constants.DATA_DIR, constants.DATASET)
