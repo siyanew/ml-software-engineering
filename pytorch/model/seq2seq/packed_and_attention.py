@@ -24,6 +24,29 @@ class Model(BaseModel):
 
         self.apply(lambda m: normal_with_bias(m, 0, 0.01, 0))
 
+    def process_batch(self, batch, train=True):
+        src, src_len = batch.src
+        trg = batch.trg
+
+        src, src_len = src.to(self.device), src_len.to(self.device)
+        trg = trg.to(self.device)
+
+        if train:
+            output, attention = self.forward(src, src_len, trg)
+        else:
+            output, attention = self.forward(src, src_len, trg, teacher_forcing_ratio=0)
+
+        # trg = [trg sent len, batch size]
+        # output = [trg sent len, batch size, output dim]
+
+        output = output[1:].view(-1, output.shape[-1])
+        trg = trg[1:].view(-1)
+
+        # trg = [(trg sent len - 1) * batch size]
+        # output = [(trg sent len - 1) * batch size, output dim]
+
+        return output, trg
+
     def set_tokens(self, pad_idx, sos_idx, eos_idx):
         self.pad_idx = pad_idx
         self.sos_idx = sos_idx

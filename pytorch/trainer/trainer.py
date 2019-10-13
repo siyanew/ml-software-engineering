@@ -38,6 +38,7 @@ class Trainer(BaseTrainer):
             self.step = self._step
 
     def _step(self, batch, train=True):
+        # TODO: refactor this method to models
         # Note this only works for the BucketIterator, and not for torch Dataloaders
         src = batch.src
         target = batch.trg
@@ -64,27 +65,7 @@ class Trainer(BaseTrainer):
         return output, target
 
     def _packed_step(self, batch, train=True):
-        src, src_len = batch.src
-        trg = batch.trg
-
-        src, src_len = src.to(self.device), src_len.to(self.device)
-        trg = trg.to(self.device)
-
-        if train:
-            output, attention = self.model(src, src_len, trg)
-        else:
-            output, attention = self.model(src, src_len, trg, teacher_forcing_ratio=0)
-
-        # trg = [trg sent len, batch size]
-        # output = [trg sent len, batch size, output dim]
-
-        output = output[1:].view(-1, output.shape[-1])
-        trg = trg[1:].view(-1)
-
-        # trg = [(trg sent len - 1) * batch size]
-        # output = [(trg sent len - 1) * batch size, output dim]
-
-        return output, trg
+        return self.model.process_batch(batch, train)
 
     def _train_epoch(self, epoch):
         """

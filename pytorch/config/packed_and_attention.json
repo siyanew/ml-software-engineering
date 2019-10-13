@@ -22,8 +22,8 @@
       "data_dir": "data/multi30k",
       "reverse_src": false,
       "batch_sizes": [
-        128,
-        128,
+        64,
+        64,
         1
       ]
     }
@@ -56,5 +56,8 @@
     "monitor": "min val_loss",
     "early_stop": 10,
     "tensorboard": true
+  },
+  "inference": {
+    "file": "data/multi30k/multi30k/test2016.de"
   }
 }
