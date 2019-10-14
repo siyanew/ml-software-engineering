@@ -58,6 +58,8 @@
     "tensorboard": true
   },
   "inference": {
-    "file": "data/multi30k/multi30k/test2016.de"
+    "src_file": "data/multi30k/multi30k/test2016.de",
+    "trg_file": "data/multi30k/multi30k/test2016.en",
+    "pred_file": "data/multi30k/multi30k/test2016_pred.en"
   }
 }

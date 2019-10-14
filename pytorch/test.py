@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import spacy
 import torch
+from nltk.translate.bleu_score import SmoothingFunction, corpus_bleu, sentence_bleu
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
@@ -24,7 +25,7 @@ def main(config):
 
     if config['data_loader']['iterator']:
         loaders = config.init_obj('data_loader', module_data)
-        data_loader = loaders.split_test()
+        # data_loader = loaders.split_test()
     else:
         data_loader = getattr(module_data, config['data_loader']['type'])(
             config['data_loader']['args']['data_dir'],
@@ -63,9 +64,8 @@ def main(config):
     model = model.to(device)
     model.eval()
 
-    total_loss = 0.0
-
     # print("Computing Loss...")
+    # total_loss = 0.0
     # with torch.no_grad():
     #     for i, batch in enumerate(tqdm(data_loader)):
     #         output, target = model.process_batch(batch)
@@ -84,22 +84,69 @@ def main(config):
     # }
     # logger.info(log)
 
-    fpath = config['inference']['file']
-    print(f"Inference on {fpath}")
-
-    source_file = open(fpath, encoding='utf-8')
-    target_file = open(f"{fpath}_pred", "a+")
+    # Set up the translate function
     spacy_de = spacy.load('de')
+    spacy_en = spacy.load('en')
     SRC = loaders.SRC
     TRG = loaders.TRG
+    translate = get_translation_fn(model, device, SRC, TRG)
 
-    for idx, line in enumerate(tqdm(source_file)):
-        # Strip newline characters
-        line = line.strip()
+    # Blue score init
+    hypotheses = list()
+    references = list()
+    # adds epsilon counts
+    smoother = SmoothingFunction().method1
 
-        # Process from source line to target line
-        tokenized_sentence = spacy_de.tokenizer(line)
-        tokenized_sentence = ['<sos>'] + [t.text.lower() for t in tokenized_sentence] + ['<eos>']
+    files = config['inference']
+
+    logger.info(f"Starting inference")
+    for key, value in files.items():
+        t, file = str(key).split('_')
+        logger.info(f'\t {t.capitalize():5s} {file.capitalize():5s} \t: {value}')
+
+    with open(files['src_file'], encoding='utf-8') as src_file, \
+            open(files['trg_file'], encoding='utf-8') as trg_file, \
+            open(files['pred_file'], "a+", encoding='utf-8') as pred_file:
+
+        for idx, (src_sent, trg_sent) in tqdm(enumerate(zip(src_file, trg_file))):
+            # Strip white space and convert to lower
+            src_sent = src_sent.strip().lower()
+            trg_sent = trg_sent.strip().lower()
+
+            # Tokenize
+            src_tokens = [t.text for t in spacy_de.tokenizer(src_sent)]
+            trg_tokens = [t.text for t in spacy_en.tokenizer(trg_sent)]
+
+            # Translate with the trained model
+            pred_tokens, attention = translate(src_tokens)
+            pred_sent = " ".join(pred_tokens)
+
+            # Save results to tensorboard
+            tensorboard.add_text(f"{idx}/src", src_sent)
+            tensorboard.add_text(f"{idx}/trg", trg_sent)
+            tensorboard.add_text(f"{idx}/pred", pred_sent)
+            tensorboard.add_scalar(f"{idx}/sent_bleu",
+                                   sentence_bleu(trg_tokens, pred_tokens, smoothing_function=smoother))
+
+            references.append(trg_tokens)
+            hypotheses.append(pred_tokens)
+
+            # Visualize the attention
+            att_fig = display_attention(src_tokens, pred_tokens, attention)
+            tensorboard.add_figure(f"{idx}/attention", att_fig)
+            plt.close(att_fig)
+
+            if idx == 10:
+                break
+
+            print(pred_sent, file=pred_file)
+
+        tensorboard.add_scalar("test/corpus_blue", corpus_bleu(hypotheses, references, smoothing_function=smoother))
+
+
+def get_translation_fn(model, device, SRC, TRG):
+    def translate_fn(tokens):
+        tokenized_sentence = ['<sos>'] + tokens + ['<eos>']
         numericalized = [SRC.vocab.stoi[t] for t in tokenized_sentence]
         sentence_length = torch.LongTensor([len(numericalized)]).to(device)
         tensor = torch.LongTensor(numericalized).unsqueeze(1).to(device)
@@ -108,22 +155,9 @@ def main(config):
         translation = [TRG.vocab.itos[t] for t in translation_tensor]
         translation, attention = translation[1:], attention[1:]
 
-        trg_pred = " ".join(translation)
+        return translation, attention
 
-        # Save results to tensorboard
-        tensorboard.add_text(f"{idx}/src", line)
-        tensorboard.add_text(f"{idx}/trg", trg_pred)
-
-        # Visualize the attention
-        att_fig = display_attention(line, translation, attention)
-        tensorboard.add_figure(f"{idx}/attention", att_fig)
-        plt.close(att_fig)
-
-        target_file.write(trg_pred)
-        target_file.write("\n")
-
-    source_file.close()
-    target_file.close()
+    return translate_fn
 
 
 def display_attention(sentence, translation, attention):
@@ -135,7 +169,7 @@ def display_attention(sentence, translation, attention):
     cax = ax.matshow(attention, cmap='bone')
 
     ax.tick_params(labelsize=15)
-    ax.set_xticklabels([''] + ['<sos>'] + [t.lower() for t in sentence] + ['<eos>'],
+    ax.set_xticklabels([''] + ['<sos>'] + sentence + ['<eos>'],
                        rotation=45)
     ax.set_yticklabels([''] + translation)
 
