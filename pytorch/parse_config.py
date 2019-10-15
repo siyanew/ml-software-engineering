@@ -1,3 +1,4 @@
+import importlib
 import logging
 import os
 from datetime import datetime
@@ -82,16 +83,29 @@ class ConfigParser:
         modification = {opt.target: getattr(args, _get_opt_name(opt.flags)) for opt in options}
         return cls(config, resume, modification)
 
+    def init_obj_from_file(self, name, *args, **kwargs):
+        """
+        Initialize an object with handle 'class_name' from the 'file' in the config
+        Returns the instance initialized with the corresponding arguments given
+        """
+        file = self[name]['file']
+        module = importlib.import_module(file)
+
+        return self.init_obj(name, module, *args, **kwargs)
+
     def init_obj(self, name, module=None, *args, **kwargs):
         """
-        Finds a function handle with the name given as 'class_name' in config, and returns the
+        Finds a function handle with the name given as 'type' in config, and returns the
         instance initialized with corresponding arguments given.
 
         `object = config.init_obj('name', module, a, b=1)`
         is equivalent to
         `object = module.name(a, b=1)`
         """
-        module_name = self[name]['class_name']
+        if 'class_name' in self[name]:
+            module_name = self[name]['class_name']
+        else:
+            module_name = self[name]['type']
         module_args = dict(self[name]['args'])
         assert all([k not in module_args for k in kwargs]), 'Overwriting kwargs given in config file is not allowed'
         module_args.update(kwargs)

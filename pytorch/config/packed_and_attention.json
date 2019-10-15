@@ -2,7 +2,7 @@
   "name": "Multi_30k_packed",
   "n_gpu": 1,
   "arch": {
-    "module": "model.seq2seq.packed_and_attention",
+    "file": "model.seq2seq.packed_and_attention",
     "class_name": "Model",
     "packed": true,
     "args": {
@@ -17,7 +17,7 @@
     }
   },
   "data_loader": {
-    "module": "data_loader.multi30k_loader",
+    "file": "data_loader.multi30k_loader",
     "class_name": "LanguageDataLoader",
     "iterator": true,
     "args": {

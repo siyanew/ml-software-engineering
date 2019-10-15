@@ -26,8 +26,7 @@ def main(config: ConfigParser):
     logger = config.get_logger('train')
 
     # Setup data_loader instances
-    module_data = importlib.import_module(config['data_loader']['module'])
-    data_loader = config.init_obj('data_loader', module_data)
+    data_loader = config.init_obj_from_file('data_loader')
 
     # Load torch text Iterator
     if config['data_loader']['iterator']:
@@ -39,8 +38,7 @@ def main(config: ConfigParser):
         valid_data_loader = data_loader.split_validation()
 
     # Build model architecture, then print to console
-    module_arch = importlib.import_module(config['arch']['module'])
-    model = config.init_obj('arch', module_arch)
+    model = config.init_obj_from_file('arch')
     logger.info(model)
 
     # Get loss criterion function
