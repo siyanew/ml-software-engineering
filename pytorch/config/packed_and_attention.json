@@ -16,11 +16,12 @@
     }
   },
   "data_loader": {
-    "type": "PackedLanguageDataLoader",
+    "type": "LanguageDataLoader",
     "iterator": true,
     "args": {
       "data_dir": "data/multi30k",
       "reverse_src": false,
+      "packed": true,
       "batch_sizes": [
         64,
         64,

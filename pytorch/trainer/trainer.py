@@ -1,9 +1,14 @@
 import math
+from typing import Callable, List
 
 import numpy as np
 import torch
+from torch.nn import Module
+from torch.optim.lr_scheduler import _LRScheduler
+from torch.optim.optimizer import Optimizer
 
-from base import BaseTrainer
+from base import BaseModel, BaseTrainer
+from parse_config import ConfigParser
 from utils import MetricTracker, inf_loop
 
 
@@ -12,9 +17,11 @@ class Trainer(BaseTrainer):
     Trainer class
     """
 
-    def __init__(self, model, criterion, metric_ftns, optimizer, config, data_loader,
-                 valid_data_loader=None, lr_scheduler=None, len_epoch=None):
+    def __init__(self, model: BaseModel, criterion: Module, metric_ftns: List[Callable],
+                 optimizer: Optimizer, config: ConfigParser, data_loader,
+                 valid_data_loader=None, lr_scheduler: _LRScheduler = None, len_epoch: int = None):
         super().__init__(model, criterion, metric_ftns, optimizer, config)
+
         self.config = config
         self.data_loader = data_loader
         if len_epoch is None:
@@ -24,6 +31,7 @@ class Trainer(BaseTrainer):
             # iteration-based training
             self.data_loader = inf_loop(data_loader)
             self.len_epoch = len_epoch
+
         self.valid_data_loader = valid_data_loader
         self.do_validation = self.valid_data_loader is not None
         self.lr_scheduler = lr_scheduler
@@ -32,42 +40,9 @@ class Trainer(BaseTrainer):
         self.train_metrics = MetricTracker('loss', 'perplexity', writer=self.writer)
         self.valid_metrics = MetricTracker('loss', 'perplexity', writer=self.writer)
 
-        if 'packed' in config['arch'] and config['arch']['packed']:
-            self.step = self._packed_step
-        else:
-            self.step = self._step
+        self.step = self.model.process_batch
 
-    def _step(self, batch, train=True):
-        # TODO: refactor this method to models
-        # Note this only works for the BucketIterator, and not for torch Dataloaders
-        src = batch.src
-        target = batch.trg
-
-        src, target = src.to(self.device), target.to(self.device)
-        if train:
-            output = self.model(src, target)
-        else:
-            # Turn of teacher forcing
-            output = self.model(src, target, teacher_forcing_ratio=0)
-
-        # as the loss function only works on 2d inputs with 1d targets we need to flatten each of them with .view
-        # we also don't want to measure the loss of the <sos> token, hence we slice off the first column of the
-        # output and target tensors
-
-        # trg = [trg sent len, batch size]
-        # output = [trg sent len, batch size, output dim]
-        output = output[1:].view(-1, output.shape[-1])
-        target = target[1:].view(-1)
-
-        # trg = [(trg sent len - 1) * batch size]
-        # output = [(trg sent len - 1) * batch size, output dim]
-
-        return output, target
-
-    def _packed_step(self, batch, train=True):
-        return self.model.process_batch(batch, train)
-
-    def _train_epoch(self, epoch):
+    def _train_epoch(self, epoch: int) -> dict:
         """
         Training logic for an epoch
 
@@ -119,7 +94,7 @@ class Trainer(BaseTrainer):
             self.lr_scheduler.step()
         return log
 
-    def _valid_epoch(self, epoch):
+    def _valid_epoch(self, epoch: int) -> dict:
         """
         Validate after training an epoch
 
@@ -148,7 +123,7 @@ class Trainer(BaseTrainer):
             self.writer.add_histogram(name, p, bins='auto')
         return self.valid_metrics.result()
 
-    def _progress(self, batch_idx):
+    def _progress(self, batch_idx: int) -> str:
         base = '[{}/{} ({:.0f}%)]'
         if hasattr(self.data_loader, 'n_samples'):
             current = batch_idx * self.data_loader.batch_size

@@ -1,11 +1,12 @@
-import torch.nn.functional as F
-import torch.nn as nn
+from torch import Tensor
+from torch.nn import CrossEntropyLoss
+from torch.nn.functional import nll_loss
 
 
-def nll_loss(output, target):
-    return F.nll_loss(output, target)
+def nll_loss(output: Tensor, target: Tensor) -> Tensor:
+    return nll_loss(output, target)
 
 
-def cross_entropy(padding_idx):
+def cross_entropy(padding_idx: int) -> CrossEntropyLoss:
     # Encapsulate the padding idx in the criterion function
-    return nn.CrossEntropyLoss(ignore_index=padding_idx)
+    return CrossEntropyLoss(ignore_index=padding_idx)

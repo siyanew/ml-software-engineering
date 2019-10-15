@@ -1,10 +1,12 @@
 import random
+from typing import Tuple
 
 import torch
-import torch.nn as nn
-from model.init_weights import uniform
+from torch import nn as nn, torch
+from torchtext.data import Batch
 
 from base import BaseModel
+from model.init_weights import uniform
 
 
 class Model(BaseModel):
@@ -30,6 +32,29 @@ class Model(BaseModel):
 
         # Initialize with uniform weights between -0.08 and +0.08
         self.apply(lambda m: uniform(m, -0.08, +0.08))
+
+    def process_batch(self, batch: Batch, train: bool = True) -> Tuple[Tensor, Tensor]:
+        src, src_len = batch.src
+        trg = batch.trg
+
+        src, src_len = src.to(self.device), src_len.to(self.device)
+        trg = trg.to(self.device)
+
+        if train:
+            output, attention = self.forward(src, src_len, trg)
+        else:
+            output, attention = self.forward(src, src_len, trg, teacher_forcing_ratio=0)
+
+        # trg = [trg sent len, batch size]
+        # output = [trg sent len, batch size, output dim]
+
+        output = output[1:].view(-1, output.shape[-1])
+        trg = trg[1:].view(-1)
+
+        # trg = [(trg sent len - 1) * batch size]
+        # output = [(trg sent len - 1) * batch size, output dim]
+
+        return output, trg
 
     def forward(self, src, trg, teacher_forcing_ratio=0.5):
         # src = [src sent len, batch size]

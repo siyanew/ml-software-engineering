@@ -1,16 +1,21 @@
 import random
+from typing import Tuple
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch import Tensor
+from torchtext.data import Batch
 
 from base import BaseModel
 from model.init_weights import normal_with_bias
 
 
 class Model(BaseModel):
-    def __init__(self, input_dim, output_dim, enc_emb_dim, dec_emb_dim, enc_hid_dim, dec_hid_dim,
-                 enc_dropout, dec_dropout):
+    def __init__(self, input_dim: int, output_dim: int,
+                 enc_emb_dim: int, dec_emb_dim: int,
+                 enc_hid_dim: int, dec_hid_dim: int,
+                 enc_dropout: float, dec_dropout: float):
         super().__init__()
 
         self.attention = Attention(enc_hid_dim, dec_hid_dim)
@@ -24,7 +29,7 @@ class Model(BaseModel):
 
         self.apply(lambda m: normal_with_bias(m, 0, 0.01, 0))
 
-    def process_batch(self, batch, train=True):
+    def process_batch(self, batch: Batch, train: bool = True) -> Tuple[Tensor, Tensor]:
         src, src_len = batch.src
         trg = batch.trg
 
@@ -47,16 +52,17 @@ class Model(BaseModel):
 
         return output, trg
 
-    def set_tokens(self, pad_idx, sos_idx, eos_idx):
+    def set_tokens(self, pad_idx: int, sos_idx: int, eos_idx: int):
         self.pad_idx = pad_idx
         self.sos_idx = sos_idx
         self.eos_idx = eos_idx
 
-    def create_mask(self, src):
+    def create_mask(self, src: Tensor) -> Tensor:
         mask = (src != self.pad_idx).permute(1, 0)
         return mask
 
-    def forward(self, src, src_len, trg, teacher_forcing_ratio=0.5):
+    def forward(self, src: Tensor, src_len: Tensor, trg: Tensor,
+                teacher_forcing_ratio: float = 0.5) -> Tuple[Tensor, Tensor]:
 
         # src = [src sent len, batch size]
         # src_len = [batch size]
@@ -123,7 +129,7 @@ class Model(BaseModel):
 
 
 class Encoder(nn.Module):
-    def __init__(self, input_dim, emb_dim, enc_hid_dim, dec_hid_dim, dropout):
+    def __init__(self, input_dim: int, emb_dim: int, enc_hid_dim: int, dec_hid_dim: int, dropout: float):
         super().__init__()
 
         self.input_dim = input_dim
@@ -140,7 +146,7 @@ class Encoder(nn.Module):
 
         self.dropout = nn.Dropout(dropout)
 
-    def forward(self, src, src_len):
+    def forward(self, src: Tensor, src_len: Tensor) -> Tuple[Tensor, Tensor]:
         # src = [src sent len, batch size]
 
         embedded = self.dropout(self.embedding(src))
@@ -178,7 +184,7 @@ class Encoder(nn.Module):
 
 
 class Attention(nn.Module):
-    def __init__(self, enc_hid_dim, dec_hid_dim):
+    def __init__(self, enc_hid_dim: int, dec_hid_dim: int):
         super().__init__()
 
         self.enc_hid_dim = enc_hid_dim
@@ -187,7 +193,7 @@ class Attention(nn.Module):
         self.attn = nn.Linear((enc_hid_dim * 2) + dec_hid_dim, dec_hid_dim)
         self.v = nn.Parameter(torch.rand(dec_hid_dim))
 
-    def forward(self, hidden, encoder_outputs, mask):
+    def forward(self, hidden: Tensor, encoder_outputs: Tensor, mask: Tensor) -> Tensor:
         # hidden = [batch size, dec hid dim]
         # encoder_outputs = [src sent len, batch size, enc hid dim * 2]
         # mask = [batch size, src sent len]
@@ -227,7 +233,8 @@ class Attention(nn.Module):
 
 
 class Decoder(nn.Module):
-    def __init__(self, output_dim, emb_dim, enc_hid_dim, dec_hid_dim, dropout, attention):
+    def __init__(self, output_dim: int, emb_dim: int, enc_hid_dim: int, dec_hid_dim: int,
+                 dropout: float, attention: Attention):
         super().__init__()
 
         self.emb_dim = emb_dim
@@ -245,7 +252,9 @@ class Decoder(nn.Module):
 
         self.dropout = nn.Dropout(dropout)
 
-    def forward(self, input, hidden, encoder_outputs, mask):
+    def forward(self, input: Tensor, hidden: Tensor, encoder_outputs: Tensor,
+                mask: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
+
         # input = [batch size]
         # hidden = [batch size, dec hid dim]
         # encoder_outputs = [src sent len, batch size, enc hid dim * 2]

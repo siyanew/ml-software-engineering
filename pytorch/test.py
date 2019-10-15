@@ -1,15 +1,19 @@
 import argparse
+from typing import Callable, List
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import spacy
 import torch
 from nltk.translate.bleu_score import SmoothingFunction, corpus_bleu, sentence_bleu
+from torch import Tensor
 from torch.utils.tensorboard import SummaryWriter
+from torchtext.data import Field
 from tqdm import tqdm
 
 import data_loader.data_loaders as module_data
 import model.loss as module_loss
+from base import BaseModel
 from parse_config import ConfigParser
 
 # Fix GPU problems by first calling current_device()
@@ -17,12 +21,12 @@ from parse_config import ConfigParser
 torch.cuda.current_device()
 
 
-def main(config):
+def main(config: ConfigParser):
+    # Set up logging
     tensorboard = SummaryWriter(config.log_dir_test)
     logger = config.get_logger('test')
 
-    # setup data_loader instances
-
+    # Setup data_loader instances
     if config['data_loader']['iterator']:
         loaders = config.init_obj('data_loader', module_data)
         # data_loader = loaders.split_test()
@@ -36,13 +40,11 @@ def main(config):
             num_workers=2
         )
 
-    # build model architecture
+    # Build model architecture
     model = config.init_obj('arch')
     logger.info(model)
 
-    # get function handles of loss and metrics
-    loss_fn = getattr(module_loss, config['loss']['function'])
-
+    # Load the model parameters
     logger.info('Loading checkpoint: {} ...'.format(config.resume))
     checkpoint = torch.load(config.resume)
     state_dict = checkpoint['state_dict']
@@ -50,7 +52,10 @@ def main(config):
         model = torch.nn.DataParallel(model)
     model.load_state_dict(state_dict)
 
-    # set the padding index in the criterion such that we ignore pad tokens
+    # Get function handles of loss and metrics
+    loss_fn = getattr(module_loss, config['loss']['function'])
+
+    # Set the padding index in the criterion such that we ignore pad tokens
     if config['loss']['padding_idx']:
         loss_fn = loss_fn(loaders.TRG.vocab.stoi['<pad>'])
 
@@ -59,7 +64,7 @@ def main(config):
                          loaders.TRG.vocab.stoi['<sos>'],
                          loaders.TRG.vocab.stoi['<eos>'])
 
-    # prepare model for testing
+    # Prepare model for testing
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = model.to(device)
     model.eval()
@@ -94,20 +99,23 @@ def main(config):
     # Blue score init
     hypotheses = list()
     references = list()
-    # adds epsilon counts
+    # Adds epsilon to bleu counts
     smoother = SmoothingFunction().method1
 
     files = config['inference']
 
+    # Pretty print interference information
     logger.info(f"Starting inference")
     for key, value in files.items():
         t, file = str(key).split('_')
         logger.info(f'\t {t.capitalize():5s} {file.capitalize():5s} \t: {value}')
 
+    # Keep track of a src, trg and predictions file
     with open(files['src_file'], encoding='utf-8') as src_file, \
             open(files['trg_file'], encoding='utf-8') as trg_file, \
             open(files['pred_file'], "a+", encoding='utf-8') as pred_file:
 
+        # For each file from the src and trg
         for idx, (src_sent, trg_sent) in tqdm(enumerate(zip(src_file, trg_file))):
             # Strip white space and convert to lower
             src_sent = src_sent.strip().lower()
@@ -136,16 +144,15 @@ def main(config):
             tensorboard.add_figure(f"{idx}/attention", att_fig)
             plt.close(att_fig)
 
-            if idx == 10:
-                break
-
+            # Print to predictions file
             print(pred_sent, file=pred_file)
 
-        tensorboard.add_scalar("test/corpus_blue", corpus_bleu(hypotheses, references, smoothing_function=smoother))
+    # Compute the corpus bleu score
+    tensorboard.add_scalar("test/corpus_blue", corpus_bleu(hypotheses, references, smoothing_function=smoother))
 
 
-def get_translation_fn(model, device, SRC, TRG):
-    def translate_fn(tokens):
+def get_translation_fn(model: BaseModel, device: torch.device, SRC: Field, TRG: Field) -> Callable:
+    def translate_fn(tokens: List[str]) -> (Tensor, Tensor):
         tokenized_sentence = ['<sos>'] + tokens + ['<eos>']
         numericalized = [SRC.vocab.stoi[t] for t in tokenized_sentence]
         sentence_length = torch.LongTensor([len(numericalized)]).to(device)
@@ -160,7 +167,7 @@ def get_translation_fn(model, device, SRC, TRG):
     return translate_fn
 
 
-def display_attention(sentence, translation, attention):
+def display_attention(sentence: List[str], translation: List[str], attention: Tensor) -> plt.figure:
     fig = plt.figure(figsize=(10, 10))
     ax = fig.add_subplot(111)
 

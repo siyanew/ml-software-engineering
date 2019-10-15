@@ -11,8 +11,8 @@ import model.metric as module_metric
 from parse_config import ConfigParser
 from trainer import Trainer
 
-# fix random seeds for reproducibility
-SEED = 123
+# Fix random seeds for reproducibility
+SEED = 42
 torch.manual_seed(SEED)
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
@@ -23,54 +23,58 @@ np.random.seed(SEED)
 torch.cuda.current_device()
 
 
-def main(config):
+def main(config: ConfigParser):
     logger = config.get_logger('train')
 
     # setup data_loader instances
     data_loader = config.init_obj('data_loader', module_data)
+
+    # Load torch text Iterator
     if config['data_loader']['iterator']:
         train_data_loader = data_loader.split_train()
         valid_data_loader = data_loader.split_validation()
+    # Load torch DataLoader
     else:
         train_data_loader = data_loader
         valid_data_loader = data_loader.split_validation()
 
-    # build model architecture, then print to console
+    # Build model architecture, then print to console
     module_arch = importlib.import_module(config['arch']['file'])
     model = config.init_obj('arch', module_arch)
     logger.info(model)
 
-    # get function handles of loss and metrics
+    # Get loss criterion function
     criterion = getattr(module_loss, config['loss']['function'])
 
-    # set the padding index in the criterion such that we ignore pad tokens
+    # Set the padding index in the criterion such that pad tokens are ignored
     if config['loss']['padding_idx']:
         criterion = criterion(data_loader.TRG.vocab.stoi['<pad>'])
 
+    # Set special token indices in the model for packing
     if 'packed' in config['arch'] and config['arch']['packed']:
         model.set_tokens(data_loader.SRC.vocab.stoi['<pad>'],
                          data_loader.TRG.vocab.stoi['<sos>'],
                          data_loader.TRG.vocab.stoi['<eos>'])
 
+    # Load extra metrics that can be analysed during training
     metrics = [getattr(module_metric, met) for met in config['metrics']]
 
-    # build optimizer, learning rate scheduler. delete every lines containing lr_scheduler for disabling scheduler
+    # Build optimizer and learning rate scheduler
     trainable_params = filter(lambda p: p.requires_grad, model.parameters())
     optimizer = config.init_obj('optimizer', torch.optim, trainable_params)
-
     lr_scheduler = config.init_obj('lr_scheduler', torch.optim.lr_scheduler, optimizer)
 
+    # Start training
     trainer = Trainer(model, criterion, metrics, optimizer,
                       config=config,
                       data_loader=train_data_loader,
                       valid_data_loader=valid_data_loader,
                       lr_scheduler=lr_scheduler)
-
     trainer.train()
 
 
 if __name__ == '__main__':
-    args = argparse.ArgumentParser(description='PyTorch Template')
+    args = argparse.ArgumentParser(description='Train a PyTorch model')
     args.add_argument('-c', '--config', default=None, type=str,
                       help='config file path (default: None)')
     args.add_argument('-r', '--resume', default=None, type=str,
