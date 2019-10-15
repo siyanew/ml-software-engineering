@@ -1,0 +1,75 @@
+{
+  "name": "NMT1_half_dims",
+  "n_gpu": 1,
+  "arch": {
+    "file": "model.seq2seq.packed_and_attention",
+    "class_name": "Model",
+    "packed": true,
+    "args": {
+      "input_dim": 50004,
+      "output_dim": 14200,
+      "enc_emb_dim": 512,
+      "dec_emb_dim": 512,
+      "enc_hid_dim": 1024,
+      "dec_hid_dim": 1024,
+      "enc_dropout": 0.5,
+      "dec_dropout": 0.5
+    }
+  },
+  "data_loader": {
+    "file": "data_loader.nmt1_loader",
+    "class_name": "NMT1Loader",
+    "iterator": true,
+    "args": {
+      "data_dir": "data/NMT1/",
+      "packed": true,
+      "vocab_max_sizes": [
+        50004,
+        14200
+      ],
+      "vocab_min_freqs": [
+        1,
+        1
+      ],
+      "batch_sizes": [
+        64,
+        64,
+        64
+      ]
+    }
+  },
+  "optimizer": {
+    "type": "Adam",
+    "args": {
+      "lr": 0.001,
+      "weight_decay": 0,
+      "amsgrad": true
+    }
+  },
+  "loss": {
+    "function": "cross_entropy",
+    "padding_idx": true
+  },
+  "metrics": [],
+  "lr_scheduler": {
+    "type": "StepLR",
+    "args": {
+      "step_size": 50,
+      "gamma": 0.1
+    }
+  },
+  "trainer": {
+    "epochs": 500,
+    "save_dir": "saved/",
+    "save_period": 1,
+    "verbosity": 2,
+    "monitor": "min val_loss",
+    "early_stop": 20,
+    "tensorboard": true
+  },
+  "inference": {
+    "src_file": "NMT1/TestingSet/test.3000.diff",
+    "trg_file": "NMT1/TestingSet/test.3000.msg",
+    "pred_file": "NMT1/TestingSet/test.3000.pred"
+  }
+}

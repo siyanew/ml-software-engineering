@@ -1,5 +1,5 @@
 {
-  "name": "NMT1_packed",
+  "name": "NMT1_half_dims",
   "n_gpu": 1,
   "arch": {
     "file": "model.seq2seq.packed_and_attention",
@@ -34,7 +34,7 @@
       "batch_sizes": [
         32,
         32,
-        1
+        32
       ]
     }
   },
@@ -59,12 +59,12 @@
     }
   },
   "trainer": {
-    "epochs": 100,
+    "epochs": 500,
     "save_dir": "saved/",
     "save_period": 1,
     "verbosity": 2,
     "monitor": "min val_loss",
-    "early_stop": 10,
+    "early_stop": 20,
     "tensorboard": true
   },
   "inference": {

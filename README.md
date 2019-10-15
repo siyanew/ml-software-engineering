@@ -27,3 +27,20 @@ nltk.download('punkt')
 ```
 
 Now, make the necessary modifications to the configuration in `preprocessing/constants.py`. Then, from the root of this repo, run `python -m preprocessing.main`. The script will first index the dataset, which can take a couple of minutes, and then process the dataset, which can take more than an hour.
+=======
+### Train
+* Training from config: `python --config config/<config.json>`
+* Training from checkpoint: `python --resume saved/models/<model_name>/<start_time>`
+* Analyse the logs with Tensorboard: `tensorboard --logdir saved/log/<model_name>`
+  
+
+### Test
+* Test from config: `python --config config/<config.json>`
+* Test from checkpoint: `python --resume saved/models/<model_name>/<start_time>`
+* Analyse the test logs with Tensorboard: `tensorboard --logdir saved/test_log/<model_name>`
+
+The test script will compute the following on the test set: 
+* The loss and perplexity.
+* Inference on the diff data. The file with predictions of the commit messages are stored with the `.pred` suffix. 
+For the exact files location see `config['inference']`.
+
