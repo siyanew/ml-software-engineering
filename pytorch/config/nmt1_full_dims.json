@@ -1,5 +1,5 @@
 {
-  "name": "NMT1_half_dims",
+  "name": "NMT1_full_dims",
   "n_gpu": 1,
   "arch": {
     "file": "model.seq2seq.packed_and_attention",
