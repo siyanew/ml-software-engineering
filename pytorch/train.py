@@ -1,6 +1,5 @@
 import argparse
 import collections
-import importlib
 
 import numpy as np
 import torch

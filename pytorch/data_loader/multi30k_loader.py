@@ -6,6 +6,7 @@ from torchtext.data import BucketIterator, Field
 from torchtext.datasets import Multi30k
 
 from base import BaseTextIterator
+from data_loader.utils import has_vocabs, load_vocabs, save_vocabs
 
 spacy_de = spacy.load('de')
 spacy_en = spacy.load('en')
@@ -34,36 +35,47 @@ def tokenize_en(text: str) -> List[str]:
 
 class LanguageDataLoader(BaseTextIterator):
     def __init__(self, data_dir: str, reverse_src: bool, packed: bool, batch_sizes: Tuple[int, int, int]):
-
+        vocab_exists = has_vocabs(data_dir)
         # Define torch text fields for processing text
-        # Include the sentence length for source
-        if reverse_src:
-            SRC = Field(tokenize=tokenize_de_reverse,
-                        init_token='<sos>',
-                        eos_token='<eos>',
-                        include_lengths=packed,
-                        lower=True)
+        if vocab_exists:
+            print("Loading fields and vocabs...")
+            SRC, TRG = load_vocabs(data_dir)
         else:
-            SRC = Field(tokenize=tokenize_de,
+            print("Building fields...")
+
+            # Include the sentence length for source
+            if reverse_src:
+                SRC = Field(tokenize=tokenize_de_reverse,
+                            init_token='<sos>',
+                            eos_token='<eos>',
+                            include_lengths=packed,
+                            lower=True)
+            else:
+                SRC = Field(tokenize=tokenize_de,
+                            init_token='<sos>',
+                            eos_token='<eos>',
+                            include_lengths=packed,
+                            lower=True)
+
+            TRG = Field(tokenize=tokenize_en,
                         init_token='<sos>',
                         eos_token='<eos>',
-                        include_lengths=packed,
                         lower=True)
-
-        TRG = Field(tokenize=tokenize_en,
-                    init_token='<sos>',
-                    eos_token='<eos>',
-                    lower=True)
 
         # Load the Multi30k sentence dataset in de and en
+        print("Loading text data...")
         train_data, valid_data, test_data = Multi30k.splits(
             exts=('.de', '.en'),
             fields=(SRC, TRG),
             root=data_dir)
 
-        # Build vocabs
-        SRC.build_vocab(train_data, min_freq=2)
-        TRG.build_vocab(train_data, min_freq=2)
+        if not vocab_exists:
+            print("Building vocabulary...")
+            # Build vocabs
+            SRC.build_vocab(train_data, min_freq=2)
+            TRG.build_vocab(train_data, min_freq=2)
+
+            save_vocabs(data_dir, SRC, TRG)
 
         print(f"Number of training examples: {len(train_data.examples)}")
         print(f"Number of validation examples: {len(valid_data.examples)}")
@@ -82,4 +94,5 @@ class LanguageDataLoader(BaseTextIterator):
             sort_key=lambda x: len(x.src) if packed else None,
             device=device)
 
-        super().__init__(train_iterator, valid_iterator, test_iterator, SRC, TRG)
+        super().__init__(train_iterator, valid_iterator, test_iterator,
+                         SRC, TRG, tokenize_de_reverse if reverse_src else tokenize_de, tokenize_en)

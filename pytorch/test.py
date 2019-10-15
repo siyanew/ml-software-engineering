@@ -1,19 +1,18 @@
 import argparse
+import math
 from typing import Callable, List
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
-import spacy
 import torch
 from nltk.translate.bleu_score import SmoothingFunction, corpus_bleu, sentence_bleu
 from torch import Tensor
 from torch.utils.tensorboard import SummaryWriter
-from torchtext.data import Field
 from tqdm import tqdm
 
 import data_loader.multi30k_loader as module_data
 import model.loss as module_loss
-from base import BaseModel
+from base import BaseModel, BaseTextIterator
 from parse_config import ConfigParser
 
 # Fix GPU problems by first calling current_device()
@@ -28,10 +27,10 @@ def main(config: ConfigParser):
 
     # Setup data_loader instances
     if config['data_loader']['iterator']:
-        loaders = config.init_obj('data_loader', module_data)
-        # data_loader = loaders.split_test()
+        data_loader = config.init_obj('data_loader', module_data)
+        test_loader = data_loader.split_test()
     else:
-        data_loader = getattr(module_data, config['data_loader']['type'])(
+        test_loader = getattr(module_data, config['data_loader']['type'])(
             config['data_loader']['args']['data_dir'],
             batch_size=512,
             shuffle=False,
@@ -57,44 +56,39 @@ def main(config: ConfigParser):
 
     # Set the padding index in the criterion such that we ignore pad tokens
     if config['loss']['padding_idx']:
-        loss_fn = loss_fn(loaders.TRG.vocab.stoi['<pad>'])
+        loss_fn = loss_fn(data_loader.TRG.vocab.stoi['<pad>'])
 
     if 'packed' in config['arch'] and config['arch']['packed']:
-        model.set_tokens(loaders.SRC.vocab.stoi['<pad>'],
-                         loaders.TRG.vocab.stoi['<sos>'],
-                         loaders.TRG.vocab.stoi['<eos>'])
+        model.set_tokens(data_loader.SRC.vocab.stoi['<pad>'],
+                         data_loader.TRG.vocab.stoi['<sos>'],
+                         data_loader.TRG.vocab.stoi['<eos>'])
 
     # Prepare model for testing
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = model.to(device)
     model.eval()
 
-    # print("Computing Loss...")
-    # total_loss = 0.0
-    # with torch.no_grad():
-    #     for i, batch in enumerate(tqdm(data_loader)):
-    #         output, target = model.process_batch(batch)
-    #
-    #         # computing loss, metrics on test set
-    #         loss = loss_fn(output, target)
-    #         batch_size = output.shape[0]
-    #         total_loss += loss.item() * batch_size
-    #
-    # n_samples = len(data_loader)
-    # print(n_samples)
-    # avg_loss = total_loss / n_samples
-    # log = {
-    #     'loss':       avg_loss,
-    #     'perplexity': math.exp(avg_loss)
-    # }
-    # logger.info(log)
+    print("Computing Loss...")
+    total_loss = 0.0
+    with torch.no_grad():
+        for i, batch in enumerate(tqdm(test_loader)):
+            output, target = model.process_batch(batch)
+
+            # computing loss, metrics on test set
+            loss = loss_fn(output, target)
+            batch_size = output.shape[0]
+            total_loss += loss.item() * batch_size
+
+    n_samples = len(test_loader)
+    avg_loss = total_loss / n_samples
+    log = {
+        'loss':       avg_loss,
+        'perplexity': math.exp(avg_loss)
+    }
+    logger.info(log)
 
     # Set up the translate function
-    spacy_de = spacy.load('de')
-    spacy_en = spacy.load('en')
-    SRC = loaders.SRC
-    TRG = loaders.TRG
-    translate = get_translation_fn(model, device, SRC, TRG)
+    translate = get_translation_fn(model, device, data_loader)
 
     # Blue score init
     hypotheses = list()
@@ -122,8 +116,8 @@ def main(config: ConfigParser):
             trg_sent = trg_sent.strip().lower()
 
             # Tokenize
-            src_tokens = [t.text for t in spacy_de.tokenizer(src_sent)]
-            trg_tokens = [t.text for t in spacy_en.tokenizer(trg_sent)]
+            src_tokens = data_loader.src_tokenize(src_sent)
+            trg_tokens = data_loader.trg_tokenize(trg_sent)
 
             # Translate with the trained model
             pred_tokens, attention = translate(src_tokens)
@@ -151,15 +145,15 @@ def main(config: ConfigParser):
     tensorboard.add_scalar("test/corpus_blue", corpus_bleu(hypotheses, references, smoothing_function=smoother))
 
 
-def get_translation_fn(model: BaseModel, device: torch.device, SRC: Field, TRG: Field) -> Callable:
+def get_translation_fn(model: BaseModel, device: torch.device, data_loader: BaseTextIterator) -> Callable:
     def translate_fn(tokens: List[str]) -> (Tensor, Tensor):
-        tokenized_sentence = ['<sos>'] + tokens + ['<eos>']
-        numericalized = [SRC.vocab.stoi[t] for t in tokenized_sentence]
-        sentence_length = torch.LongTensor([len(numericalized)]).to(device)
-        tensor = torch.LongTensor(numericalized).unsqueeze(1).to(device)
-        translation_tensor_logits, attention = model(tensor, sentence_length, None, 0)
+        tensor, length = data_loader.tokens_to_tensor(tokens)
+        tensor, length = tensor.to(device), length.to(device)
+
+        translation_tensor_logits, attention = model(tensor, length, None, 0)
         translation_tensor = torch.argmax(translation_tensor_logits.squeeze(1), 1)
-        translation = [TRG.vocab.itos[t] for t in translation_tensor]
+
+        translation = data_loader.tensor_to_tokens(translation_tensor)
         translation, attention = translation[1:], attention[1:]
 
         return translation, attention
