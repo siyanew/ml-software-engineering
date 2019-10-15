@@ -5,7 +5,6 @@ import importlib
 import numpy as np
 import torch
 
-import data_loader.data_loaders as module_data
 import model.loss as module_loss
 import model.metric as module_metric
 from parse_config import ConfigParser
@@ -26,7 +25,8 @@ torch.cuda.current_device()
 def main(config: ConfigParser):
     logger = config.get_logger('train')
 
-    # setup data_loader instances
+    # Setup data_loader instances
+    module_data = importlib.import_module(config['data_loader']['module'])
     data_loader = config.init_obj('data_loader', module_data)
 
     # Load torch text Iterator
@@ -39,7 +39,7 @@ def main(config: ConfigParser):
         valid_data_loader = data_loader.split_validation()
 
     # Build model architecture, then print to console
-    module_arch = importlib.import_module(config['arch']['file'])
+    module_arch = importlib.import_module(config['arch']['module'])
     model = config.init_obj('arch', module_arch)
     logger.info(model)
 

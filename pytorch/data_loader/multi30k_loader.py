@@ -1,4 +1,4 @@
-from typing import Tuple, List
+from typing import List, Tuple
 
 import spacy
 import torch
@@ -11,7 +11,7 @@ spacy_de = spacy.load('de')
 spacy_en = spacy.load('en')
 
 
-def tokenize_de(text: str)-> List[str]:
+def tokenize_de(text: str) -> List[str]:
     """
     Tokenizes German text from a string into a list of strings (tokens)
     """
@@ -75,12 +75,11 @@ class LanguageDataLoader(BaseTextIterator):
 
         # Bucketing (minimizes the amount of padding by grouping similar length sentences)
         # Sort the sequences based on their non-padded length
-        sort_key = lambda x: len(x.src) if packed else None
         train_iterator, valid_iterator, test_iterator = BucketIterator.splits(
             (train_data, valid_data, test_data),
             batch_sizes=batch_sizes,
             sort_within_batch=packed,
-            sort_key=sort_key,
+            sort_key=lambda x: len(x.src) if packed else None,
             device=device)
 
         super().__init__(train_iterator, valid_iterator, test_iterator, SRC, TRG)

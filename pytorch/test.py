@@ -11,7 +11,7 @@ from torch.utils.tensorboard import SummaryWriter
 from torchtext.data import Field
 from tqdm import tqdm
 
-import data_loader.data_loaders as module_data
+import data_loader.multi30k_loader as module_data
 import model.loss as module_loss
 from base import BaseModel
 from parse_config import ConfigParser
