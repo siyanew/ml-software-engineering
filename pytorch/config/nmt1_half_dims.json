@@ -1,19 +1,20 @@
 {
-  "name": "NMT1_half_dims",
+  "name": "NMT1_lowered",
+  "notes": "Idea: model seems to overfit, lower dropout & teacher as the model is not good in prediction valdiation objects that were unseen before. Changed: SGD; ReduceLROnPlateau; dropout=0.1; default init weights; teacher 0.1",
   "n_gpu": 1,
   "arch": {
     "file": "model.seq2seq.packed_and_attention",
     "class_name": "Model",
     "packed": true,
     "args": {
-      "input_dim": 50004,
-      "output_dim": 14200,
+      "input_dim": 30827,
+      "output_dim": 5593,
       "enc_emb_dim": 256,
       "dec_emb_dim": 256,
       "enc_hid_dim": 512,
       "dec_hid_dim": 512,
-      "enc_dropout": 0.5,
-      "dec_dropout": 0.5
+      "enc_dropout": 0.1,
+      "dec_dropout": 0.1
     }
   },
   "data_loader": {
@@ -24,26 +25,24 @@
       "data_dir": "data/NMT1/",
       "packed": true,
       "vocab_max_sizes": [
-        50004,
-        14200
+        50000,
+        17000
       ],
       "vocab_min_freqs": [
-        1,
-        1
+        2,
+        2
       ],
       "batch_sizes": [
-        32,
-        32,
-        32
+        64,
+        64,
+        64
       ]
     }
   },
   "optimizer": {
-    "type": "Adam",
+    "type": "SGD",
     "args": {
-      "lr": 0.001,
-      "weight_decay": 0,
-      "amsgrad": true
+      "lr": 0.1
     }
   },
   "loss": {
@@ -52,10 +51,10 @@
   },
   "metrics": [],
   "lr_scheduler": {
-    "type": "StepLR",
+    "type": "ReduceLROnPlateau",
     "args": {
-      "step_size": 50,
-      "gamma": 0.1
+      "factor": 0.1,
+      "patience": 10
     }
   },
   "trainer": {

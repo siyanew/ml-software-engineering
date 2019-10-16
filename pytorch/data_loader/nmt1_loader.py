@@ -53,16 +53,17 @@ class NMT1Loader(BaseTextIterator):
         if not vocab_exists:
             # Build vocabs
             print("Building vocabulary...")
-            SRC.build_vocab(train_data, min_freq=vocab_min_freqs[0], max_size=vocab_max_sizes[0])
-            TRG.build_vocab(train_data, min_freq=vocab_min_freqs[1], max_size=vocab_max_sizes[1])
+            specials = ['<unk>', '<pad>', '<sos>', '<eos>']
+            SRC.build_vocab(train_data, min_freq=vocab_min_freqs[0], max_size=vocab_max_sizes[0], specials=specials)
+            TRG.build_vocab(train_data, min_freq=vocab_min_freqs[1], max_size=vocab_max_sizes[1], specials=specials)
 
             save_vocabs(data_dir, SRC, TRG)
 
         print(f"Number of training examples: {len(train_data.examples)}")
         print(f"Number of validation examples: {len(valid_data.examples)}")
         print(f"Number of testing examples: {len(test_data.examples)}")
-        print(f"Unique tokens in source (de) training vocabulary: {len(SRC.vocab)}")
-        print(f"Unique tokens in target (en) training vocabulary: {len(TRG.vocab)}")
+        print(f"Unique tokens in source (diff) training vocabulary: {len(SRC.vocab)}")
+        print(f"Unique tokens in target (msg) training vocabulary: {len(TRG.vocab)}")
 
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 

@@ -8,7 +8,6 @@ from torch import Tensor
 from torchtext.data import Batch
 
 from base import BaseModel
-from model.init_weights import normal_with_bias
 
 
 class Model(BaseModel):
@@ -27,7 +26,7 @@ class Model(BaseModel):
         self.sos_idx = None
         self.eos_idx = None
 
-        self.apply(lambda m: normal_with_bias(m, 0, 0.01, 0))
+        # self.apply(lambda m: normal_with_bias(m, 0, 0.01, 0))
 
     def process_batch(self, batch: Batch, train: bool = True) -> Tuple[Tensor, Tensor]:
         src, src_len = batch.src
@@ -37,7 +36,7 @@ class Model(BaseModel):
         trg = trg.to(self.device)
 
         if train:
-            output, attention = self.forward(src, src_len, trg)
+            output, attention = self.forward(src, src_len, trg, teacher_forcing_ratio=0.1)
         else:
             output, attention = self.forward(src, src_len, trg, teacher_forcing_ratio=0)
 
@@ -68,7 +67,6 @@ class Model(BaseModel):
         # src_len = [batch size]
         # trg = [trg sent len, batch size]
         # teacher_forcing_ratio is probability to use teacher forcing
-        # e.g. if teacher_forcing_ratio is 0.75 we use teacher forcing 75% of the time
 
         if trg is None:
             assert teacher_forcing_ratio == 0, "Must be zero during inference"
@@ -254,7 +252,6 @@ class Decoder(nn.Module):
 
     def forward(self, input: Tensor, hidden: Tensor, encoder_outputs: Tensor,
                 mask: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
-
         # input = [batch size]
         # hidden = [batch size, dec hid dim]
         # encoder_outputs = [src sent len, batch size, enc hid dim * 2]

@@ -91,7 +91,10 @@ class Trainer(BaseTrainer):
             log.update(**{'val_' + k: v for k, v in val_log.items()})
 
         if self.lr_scheduler is not None:
-            self.lr_scheduler.step()
+            if self.config['lr_scheduler']['type'] == 'ReduceLROnPlateau':
+                self.lr_scheduler.step(val_log['loss'])
+            else:
+                self.lr_scheduler.step()
         return log
 
     def _valid_epoch(self, epoch: int) -> dict:
