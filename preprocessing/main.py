@@ -90,7 +90,7 @@ def process_dataset(dataset: dict):
         for entry in ids:
 
             # Process commit
-            with msg_path.joinpath(f'{entry}.msg').open('r', encoding=constants.OUTPUT_ENCODING) as f:
+            with msg_path.joinpath(f'{entry}.msg').open('r', encoding=constants.OUTPUT_ENCODING, errors='ignore') as f:
                 msg = process_commit(f.read(), nlp)
 
             # Bail early if message cannot be processed
