@@ -135,9 +135,11 @@ def _reduce_diff(lines: List[str]) -> (str, dict):
 
             meta['file_count'] += 1
 
-            # Commit changes in last file
-            if block_lines:
-                result += block_lines
+            if block_lines:  # Commit changes in last file
+                result.append(block_lines)
+                meta['lines_kept'] += len(block_lines)
+
+                # Reset
                 block_lines = []
 
             # Reset
@@ -160,7 +162,7 @@ def _reduce_diff(lines: List[str]) -> (str, dict):
                 meta['ext_count'][filetype] += 1
 
                 # Retain just the filename for valid files
-                block_lines.append(filename.lower())
+                block_lines.append(f'{constants.PREPROCESS_DIFF_TOKEN_FILE} {filename.lower()}')
 
         elif not ignore_file:
 
@@ -209,31 +211,27 @@ def _reduce_diff(lines: List[str]) -> (str, dict):
 
     # Commit changes in last file
     if block_lines:
-        result += block_lines
+        result.append(block_lines)
+        meta['lines_kept'] += len(block_lines)
 
-    meta['lines_kept'] = len(result)
+    # Order files by most changes
+    result.sort(key=len, reverse=True)
 
-    # Don't return anything for diffs that, after processing, are empty or only contain one changed filename
+    # Flatten list (fast and readable, https://stackoverflow.com/a/408281)
+    result = [line for block in result for line in block]
+
+    # Don't return anything for diffs that are empty after processing
     result_str = ' '.join(result) if len(result) > 0 else None
 
     return result_str, meta
 
 
 def clean_diff(diff_raw: bytes) -> (str, dict):
-    try:
+    # Decode byte stream and split lines
+    lines = diff_raw.decode(errors='ignore').split('\n')
 
-        # Decode byte stream
-        lines = diff_raw.decode().split('\n')
-
-        # Process and fiter lines in diff
-        return _reduce_diff(lines)
-
-    except UnicodeDecodeError as e:
-        # TODO: handle this gracefully
-        print('\n')
-        print(diff_raw)
-        print('\n')
-        raise e
+    # Process and filter lines in diff
+    return _reduce_diff(lines)
 
 
 def parse_diff(diff: str, meta: dict) -> (List[str], dict):

@@ -68,10 +68,9 @@ def process_dataset(dataset: dict):
 
     # Load spacy
     print("Loading SpaCy...")
-    # using_gpu = spacy.prefer_gpu()
-    using_gpu = False
+    using_gpu = spacy.prefer_gpu()
     nlp = spacy.load(constants.SPACY_LANGUAGE_MODEL, disable=["ner", "textcat"])
-    _add_special_tokenizer_cases(nlp)
+    nlp = _add_special_tokenizer_cases(nlp)
     print("Using GPU: {}".format(using_gpu))
 
     # Open write handlers for result files
@@ -107,8 +106,8 @@ def process_dataset(dataset: dict):
             if not diff:
                 continue
 
-            if meta:  # No metadata if commit filtered by preliminary filter
-                # Dump metadata
+            if meta:  # Dump metadata if any (commit could be filtered by preliminary filter)
+                meta['id'] = entry
                 meta['ext_count'] = dict(meta['ext_count'])  # Can't serialize defaultdict
                 fh_diff_meta.write(f'{str(orjson.dumps(meta), constants.OUTPUT_ENCODING)}\n')
 
