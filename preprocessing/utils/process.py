@@ -36,7 +36,7 @@ def clean_commit_message(msg: str) -> str:
     msg = re_git_id.sub('', msg)
 
     # Remove square bracket label at the start of the message
-    if msg[0] == '[':
+    if len(msg) > 0 and msg[0] == '[':
         msg = msg.partition(']')[-1]
 
     # Remove label with colon (at the start of the message)
