@@ -162,7 +162,3 @@ $RECYCLE.BIN/
 
 # Ignore generated model data
 model/*.pt
-
-# Ignore parsed commit data
-repos/
-commits/
