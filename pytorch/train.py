@@ -35,10 +35,10 @@ def main(config: ConfigParser):
     if config['data_loader']['iterator']:
         train_data_loader = data_loader.split_train()
         valid_data_loader = data_loader.split_validation()
-    # Load torch DataLoader
     else:
-        train_data_loader = data_loader
-        valid_data_loader = data_loader.split_validation()
+        raise NotImplementedError
+        # train_data_loader = data_loader
+        # valid_data_loader = data_loader.split_validation()
 
     # Build model architecture, then print to console
     model = config.init_obj_from_file('arch')
