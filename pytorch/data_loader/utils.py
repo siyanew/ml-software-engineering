@@ -1,28 +1,36 @@
 import os
 from pathlib import Path
+from typing import Tuple
 
 import dill
 from torchtext.data import Field
 
-src_file = 'src_vocab'
-trg_file = 'trg_vocab'
+SRC_FILE = 'src'
+TRG_FILE = 'trg'
 
 
-def has_vocabs(data_dir: str) -> bool:
+def get_vocab_paths(data_dir: str, sizes: Tuple[int, int], freqs: Tuple[int, int]) -> (Path, Path):
+    src = get_vocab_path(data_dir, SRC_FILE, sizes[0], freqs[0])
+    trg = get_vocab_path(data_dir, TRG_FILE, sizes[1], freqs[1])
+    return src, trg
+
+
+def get_vocab_path(data_dir: str, name: str, size: int, freq: int) -> str:
     save_path = Path(data_dir) / 'processed'
+    file = f"{name}_{size}_{freq}.vocab"
+    return save_path / file
 
-    src_path = save_path / src_file
-    trg_path = save_path / trg_file
+
+def has_vocabs(data_dir: str, sizes: Tuple[int, int], freqs: Tuple[int, int]) -> bool:
+    src_path, trg_path = get_vocab_paths(data_dir, sizes, freqs)
 
     return os.path.exists(src_path) and os.path.exists(trg_path)
 
 
-def load_vocabs(data_dir: str) -> (Field, Field):
-    save_path = Path(data_dir) / 'processed'
-    print(f"Loading preprocessed vocabs from ${save_path}...")
-
-    src_path = save_path / src_file
-    trg_path = save_path / trg_file
+def load_vocabs(data_dir: str, sizes: Tuple[int, int], freqs: Tuple[int, int]) -> (Field, Field):
+    src_path, trg_path = get_vocab_paths(data_dir, sizes, freqs)
+    print(f"Loading source vocabs from ${src_path}...")
+    print(f"Loading target vocabs from ${trg_path}...")
 
     with open(src_path, 'rb') as f:
         SRC = dill.load(f)
@@ -33,15 +41,17 @@ def load_vocabs(data_dir: str) -> (Field, Field):
     return SRC, TRG
 
 
-def save_vocabs(data_dir: str, SRC: Field, TRG: Field):
+def save_vocabs(data_dir: str, SRC: Field, TRG: Field, sizes: Tuple[int, int], freqs: Tuple[int, int]):
     save_path = Path(data_dir) / 'processed'
-    print(f"Writing preprocessed vocabs to ${save_path}...")
 
     if not os.path.exists(save_path):
         os.makedirs(save_path)
 
-    with open(save_path / src_file, 'wb+') as f:
+    src_path, trg_path = get_vocab_paths(data_dir, sizes, freqs)
+    print(f"Writing preprocessed vocabs to ${src_path}...")
+    with open(src_path, 'wb+') as f:
         dill.dump(SRC, f)
 
-    with open(save_path / trg_file, 'wb+') as f:
+    print(f"Writing preprocessed vocabs to ${trg_path}...")
+    with open(trg_path, 'wb+') as f:
         dill.dump(TRG, f)

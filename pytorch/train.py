@@ -28,8 +28,10 @@ def main(config: ConfigParser):
     data_loader = config.init_obj_from_file('data_loader')
 
     # Check if the input/output dimensions are the same
-    assert len(data_loader.SRC.vocab) == config['arch']['args']['input_dim'], "Input dimensions need to match"
-    assert len(data_loader.TRG.vocab) == config['arch']['args']['output_dim'], "Output dimensions need to match"
+    assert len(data_loader.SRC.vocab) == config['arch']['args']['input_dim'], \
+        "Input dimensions need to match, check amount of unique tokens in the src vocab"
+    assert len(data_loader.TRG.vocab) == config['arch']['args']['output_dim'], \
+        "Output dimensions need to match, check amount of unique tokens in the trg vocab"
 
     # Load torch text Iterator
     if config['data_loader']['iterator']:
@@ -63,7 +65,7 @@ def main(config: ConfigParser):
     # Build optimizer and learning rate scheduler
     trainable_params = filter(lambda p: p.requires_grad, model.parameters())
     optimizer = config.init_obj('optimizer', torch.optim, trainable_params)
-    lr_scheduler = config.init_obj('lr_scheduler', torch.optim.lr_scheduler,  optimizer)
+    lr_scheduler = config.init_obj('lr_scheduler', torch.optim.lr_scheduler, optimizer)
 
     # Start training
     trainer = Trainer(model, criterion, metrics, optimizer,

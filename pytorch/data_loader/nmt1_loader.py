@@ -19,19 +19,19 @@ def tokenize_msg(text: str) -> List[str]:
 class NMT1Loader(BaseTextIterator):
     def __init__(self, data_dir: str, packed: bool,
                  vocab_max_sizes: Tuple[int, int], vocab_min_freqs: Tuple[int, int],
-                 batch_sizes: Tuple[int, int, int], test: bool=False):
+                 batch_sizes: Tuple[int, int, int], test: bool = False):
         print(f"Creating DataLoader for {'testing' if test else 'training'}")
-
-        vocab_exists = has_vocabs(data_dir)
 
         # Rebuild the vocabs during testin, as the saved can be build from a different config
         if test:
             vocab_exists = False
+        else:
+            vocab_exists = has_vocabs(data_dir, vocab_max_sizes, vocab_min_freqs)
 
         # Define torch text fields for processing text
         if vocab_exists:
             print("Loading fields and vocabs...")
-            SRC, TRG = load_vocabs(data_dir)
+            SRC, TRG = load_vocabs(data_dir, vocab_max_sizes, vocab_min_freqs)
         else:
             print("Building fields...")
 
@@ -64,7 +64,7 @@ class NMT1Loader(BaseTextIterator):
             TRG.build_vocab(train_data, min_freq=vocab_min_freqs[1], max_size=vocab_max_sizes[1], specials=specials)
 
             if not test:
-                save_vocabs(data_dir, SRC, TRG)
+                save_vocabs(data_dir, SRC, TRG, vocab_max_sizes, vocab_min_freqs)
 
         print(f"Number of training examples: {len(train_data.examples)}")
         print(f"Number of validation examples: {len(valid_data.examples)}")
