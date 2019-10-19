@@ -19,9 +19,15 @@ def tokenize_msg(text: str) -> List[str]:
 class NMT1Loader(BaseTextIterator):
     def __init__(self, data_dir: str, packed: bool,
                  vocab_max_sizes: Tuple[int, int], vocab_min_freqs: Tuple[int, int],
-                 batch_sizes: Tuple[int, int, int]):
+                 batch_sizes: Tuple[int, int, int], test: bool=False):
+        print(f"Creating DataLoader for {'testing' if test else 'training'}")
 
         vocab_exists = has_vocabs(data_dir)
+
+        # Rebuild the vocabs during testin, as the saved can be build from a different config
+        if test:
+            vocab_exists = False
+
         # Define torch text fields for processing text
         if vocab_exists:
             print("Loading fields and vocabs...")
@@ -57,7 +63,8 @@ class NMT1Loader(BaseTextIterator):
             SRC.build_vocab(train_data, min_freq=vocab_min_freqs[0], max_size=vocab_max_sizes[0], specials=specials)
             TRG.build_vocab(train_data, min_freq=vocab_min_freqs[1], max_size=vocab_max_sizes[1], specials=specials)
 
-            save_vocabs(data_dir, SRC, TRG)
+            if not test:
+                save_vocabs(data_dir, SRC, TRG)
 
         print(f"Number of training examples: {len(train_data.examples)}")
         print(f"Number of validation examples: {len(valid_data.examples)}")

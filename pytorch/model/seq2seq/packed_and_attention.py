@@ -61,7 +61,7 @@ class Model(BaseModel):
         return mask
 
     def forward(self, src: Tensor, src_len: Tensor, trg: Tensor,
-                teacher_forcing_ratio: float = 0.5) -> Tuple[Tensor, Tensor]:
+                teacher_forcing_ratio: float = 0.1) -> Tuple[Tensor, Tensor]:
 
         # src = [src sent len, batch size]
         # src_len = [batch size]

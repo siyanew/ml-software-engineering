@@ -1,16 +1,15 @@
 import argparse
-import math
 from typing import Callable, List
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
+import numpy as np
 import torch
 from nltk.translate.bleu_score import SmoothingFunction, corpus_bleu, sentence_bleu
 from torch import Tensor
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
-import data_loader.multi30k_loader as module_data
 import model.loss as module_loss
 from base import BaseModel, BaseTextIterator
 from parse_config import ConfigParser
@@ -27,21 +26,19 @@ def main(config: ConfigParser):
 
     # Setup data_loader instances
     if config['data_loader']['iterator']:
-        data_loader = config.init_obj_from_file('data_loader')
+        data_loader = config.init_obj_from_file('data_loader', test=True)
         test_loader = data_loader.split_test()
+
     else:
-        test_loader = getattr(module_data, config['data_loader']['type'])(
-            config['data_loader']['args']['data_dir'],
-            batch_size=512,
-            shuffle=False,
-            validation_split=0.0,
-            training=False,
-            num_workers=2
-        )
+        raise NotImplementedError
 
     # Build model architecture
     model = config.init_obj_from_file('arch')
     logger.info(model)
+
+    # Check the dimensions
+    assert len(data_loader.SRC.vocab) == config['arch']['args']['input_dim'], "Input dimensions need to match"
+    assert len(data_loader.TRG.vocab) == config['arch']['args']['output_dim'], "Output dimensions need to match"
 
     # Load the model parameters
     logger.info('Loading checkpoint: {} ...'.format(config.resume))
@@ -72,7 +69,7 @@ def main(config: ConfigParser):
     total_loss = 0.0
     with torch.no_grad():
         for i, batch in enumerate(tqdm(test_loader)):
-            output, target = model.process_batch(batch)
+            output, target = model.process_batch(batch, train=False)
 
             # computing loss, metrics on test set
             loss = loss_fn(output, target)
@@ -80,10 +77,11 @@ def main(config: ConfigParser):
             total_loss += loss.item() * batch_size
 
     n_samples = len(test_loader)
+    print(f"Samples: {n_samples}")
     avg_loss = total_loss / n_samples
     log = {
         'loss':       avg_loss,
-        'perplexity': math.exp(avg_loss)
+        'perplexity': np.exp(avg_loss)
     }
     logger.info(log)
 
@@ -103,6 +101,7 @@ def main(config: ConfigParser):
     for key, value in files.items():
         t, file = str(key).split('_')
         logger.info(f'\t {t.capitalize():5s} {file.capitalize():5s} \t: {value}')
+
 
     # Keep track of a src, trg and predictions file
     with open(files['src_file'], encoding='utf-8') as src_file, \
