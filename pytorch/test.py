@@ -27,7 +27,7 @@ def main(config: ConfigParser):
 
     # Setup data_loader instances
     if config['data_loader']['iterator']:
-        data_loader = config.init_obj('data_loader', module_data)
+        data_loader = config.init_obj_from_file('data_loader')
         test_loader = data_loader.split_test()
     else:
         test_loader = getattr(module_data, config['data_loader']['type'])(
@@ -40,7 +40,7 @@ def main(config: ConfigParser):
         )
 
     # Build model architecture
-    model = config.init_obj('arch')
+    model = config.init_obj_from_file('arch')
     logger.info(model)
 
     # Load the model parameters
