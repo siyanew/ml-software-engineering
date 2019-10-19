@@ -1,6 +1,6 @@
 {
   "name": "NMT1_small_vocab",
-  "notes": "Idea: model seems to overfit, lower dropout & teacher as the model is not good in prediction valdiation objects that were unseen before. Changed: SGD; ReduceLROnPlateau; dropout=0.1; default init weights; teacher 0.1",
+  "notes": "Last model was unable reach the same performance on the test set as the validation set. We think that there is a larger difference in vocabs. Therefore, the amount of tokens is reduced to multi30k proportions.  ",
   "n_gpu": 1,
   "arch": {
     "file": "model.seq2seq.packed_and_attention",
