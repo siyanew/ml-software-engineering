@@ -86,77 +86,13 @@ def process_dataset(dataset: List[tuple]):
     # Iterate over repositories (in commit messages folder)
     for repo, entry in dataset:
 
-        msg_path = p.joinpath('msg', repo)
-        diff_path = p.joinpath('diff', repo)
+        msg_path = p.joinpath('msg', repo, f'{entry}.msg')
+        diff_path = p.joinpath('diff', repo, f'{entry}.diff')
 
-        # Process commit
-        with msg_path.joinpath(f'{entry}.msg').open('r', encoding=constants.OUTPUT_ENCODING, errors='ignore') as f:
-            msg = process_commit(f.read(), nlp)
-
-        # Bail early if message cannot be processed
-        if not msg:
-            continue
-
-        # Process diff
-        with diff_path.joinpath(f'{entry}.diff').open('rb') as f:
-            data = f.read()
-            diff, meta = process_diff(data)
-
-        # Bail if diff cannot be processed
-        if not diff:
-            continue
-
-        if meta:  # Dump metadata if any (commit could be filtered by preliminary filter)
-            meta['id'] = str(entry)
-            meta['ext_count'] = dict(meta['ext_count'])  # Can't serialize defaultdict, so convert to regular dict
-            fh_diff_meta.write(f'{str(orjson.dumps(meta), constants.OUTPUT_ENCODING)}\n')
-
-        # Write results to file
-        if constants.DEBUG:
-            fh_msg.write(f'{entry}: {msg}\n')
-            fh_diff.write(f'{entry}: {diff}\n')
-        else:
-            fh_msg.write(f'{msg}\n')
-            fh_diff.write(f'{diff}\n')
-
-    # Close result file handlers
-    fh_msg.close()
-    fh_diff.close()
-    fh_diff_meta.close()
-
-
-def process_dataset_old(dataset: dict):
-    # Return if dataset is empty
-    if not dataset:
-        return
-
-    p = pathlib.Path(constants.DATA_DIR, constants.DATASET)
-
-    # Load spacy
-    print("Loading SpaCy...")
-    using_gpu = spacy.prefer_gpu()
-    nlp = spacy.load(constants.SPACY_LANGUAGE_MODEL, disable=["ner", "textcat"])
-    nlp = add_special_tokenizer_cases(nlp)
-    print("Using GPU: {}".format(using_gpu))
-
-    # Open write handlers for result files
-    fh_msg = p.joinpath(constants.DATASET + '.processed.msg').open('a', encoding=constants.OUTPUT_ENCODING, buffering=1)
-    fh_diff = p.joinpath(constants.DATASET + '.processed.diff').open('a', encoding=constants.OUTPUT_ENCODING, buffering=1)
-    fh_diff_meta = p.joinpath(constants.DATASET + '.diff.meta.jsonl').open('a', encoding=constants.OUTPUT_ENCODING, buffering=1)
-
-    # Iterate over repositories (in commit messages folder)
-    for repo, ids in dataset.items():
-
-        print(f'Start processing repo "{repo}"')
-        repo_time_start = time.time()
-
-        msg_path = p.joinpath('msg', repo)
-        diff_path = p.joinpath('diff', repo)
-
-        for entry in ids:
+        try:
 
             # Process commit
-            with msg_path.joinpath(f'{entry}.msg').open('r', encoding=constants.OUTPUT_ENCODING, errors='ignore') as f:
+            with msg_path.open('r', encoding=constants.OUTPUT_ENCODING, errors='ignore') as f:
                 msg = process_commit(f.read(), nlp)
 
             # Bail early if message cannot be processed
@@ -164,8 +100,8 @@ def process_dataset_old(dataset: dict):
                 continue
 
             # Process diff
-            with diff_path.joinpath(f'{entry}.diff').open('rb') as f:
-                data = f.read()
+            with diff_path.open('rb') as f:
+                data = f.read(constants.PREPROCESS_DIFF_MAX_BYTES + 1024)  # Don't read more than necessary, +1KB so length check to discard diffs works correctly
                 diff, meta = process_diff(data)
 
             # Bail if diff cannot be processed
@@ -173,8 +109,8 @@ def process_dataset_old(dataset: dict):
                 continue
 
             if meta:  # Dump metadata if any (commit could be filtered by preliminary filter)
-                meta['id'] = entry
-                meta['ext_count'] = dict(meta['ext_count'])  # Can't serialize defaultdict
+                meta['id'] = str(entry)
+                meta['ext_count'] = dict(meta['ext_count'])  # Can't serialize defaultdict, so convert to regular dict
                 fh_diff_meta.write(f'{str(orjson.dumps(meta), constants.OUTPUT_ENCODING)}\n')
 
             # Write results to file
@@ -185,7 +121,9 @@ def process_dataset_old(dataset: dict):
                 fh_msg.write(f'{msg}\n')
                 fh_diff.write(f'{diff}\n')
 
-        print(f'Finished processing "{repo}" in {time.time() - repo_time_start:.1f}s ({len(ids)} commits)')
+        except FileNotFoundError:
+            print(f'Cannot open diff or msg file for "{repo}/{entry}"')
+            pass
 
     # Close result file handlers
     fh_msg.close()
@@ -198,7 +136,7 @@ if __name__ == "__main__":
 
     print("Started preprocessing script. Calculating dataset size...")
 
-    num_processes = mp.cpu_count() if not constants.DEBUG else 1
+    num_processes = mp.cpu_count()
 
     # Read dataset structure
     ds_path = pathlib.Path(constants.DATA_DIR, constants.DATASET)

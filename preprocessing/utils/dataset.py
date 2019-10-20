@@ -48,10 +48,8 @@ def read_dataset(path_to_dataset: pathlib.Path, num_partitions=1) -> (List[tuple
 
     total_commits: int = len(data)
 
-    # Partition data
-    partitions = np.array_split(data, num_partitions)
-
-    return partitions, total_commits
+    # Partition data and return
+    return chunker_list(data, num_partitions), total_commits
 
 
 def read_dataset_thoroughly(path_to_dataset: pathlib.Path, num_partitions=1) -> (List[dict], int):
@@ -180,3 +178,8 @@ def _merge_and_delete_files(output_dir: pathlib.Path, output_file: str) -> None:
 
             # Delete file
             p.unlink()
+
+
+def chunker_list(seq, size):
+    """Source: https://stackoverflow.com/a/43922107"""
+    return [seq[i::size] for i in range(size)]

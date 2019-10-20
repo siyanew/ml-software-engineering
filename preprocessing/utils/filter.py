@@ -24,16 +24,11 @@ def filter_message_pre(msg: str) -> bool:
     #   Revert "Added exclamation point to story one." (#94)
     #   Revert "Revert "Revert "add LimitMempoolSize logic for mempool"""
     #   Revert "Revert "Initial commit""
-    if msg[0] in ['R', 'r'] and msg.startswith((
-            "Revert \"",
-            "revert \"",
-    )):
+    if msg[:6] in ["Revert", "revert"]:
         return False
 
     # Check for 'git merge' commits
-    #   Merge branch '(.*)'[(.*)]
-    #   Merge pull request #(.*)
-    if "Merge branch" in msg or "Merge pull request" in msg:
+    if msg[:6] == "Merge:" or "Merge branch" in msg or "Merge pull request" in msg:
         return False
 
     return True

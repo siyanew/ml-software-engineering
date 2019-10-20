@@ -10,18 +10,23 @@ from preprocessing import constants
 from preprocessing.utils.converter import Converter
 from preprocessing.utils.spacy import is_sha1
 
+import nltk
+
 # Compiled regexes
 from preprocessing.utils.spacy import tokenize_diff
 
 re_git_id = re.compile(
-    r'\s?(\((closing\s+)?\s?issue(s?)\s?|\(\s?)?#[0-9]+(\,\s?#[0-9]+)?\s?\)?')  # See: https://regex101.com/r/V1Scal/3
-re_label_colon = re.compile(r'^\w* ?\:')  # Matches "{{Label:}} commit message"
+    r'\s?(\((closing\s+)?\s?issue(s?)\s?|\(\s?)?#[0-9]+(,\s?#[0-9]+)?\s?\)?')  # See: https://regex101.com/r/V1Scal/3
+re_label_colon = re.compile(r'^\w* ?:')  # Matches "{{Label:}} commit message"
 re_mention = re.compile(
-    r"((thanks\s?)(\s?to\s?)?)?\@[a-z0-9']+\s?[.,!]*")  # Matches user mentions combined with 'thanks'
-re_url = re.compile(r"((git|ssh|http(s)?)|(git@[\w\.]+))(:(//)?)([\w\.@\:/\-~#'?,+]+)(\.git)?(/)?")  # Matches urls
+    r"((thanks\s?)(\s?to\s?)?)?@[a-z0-9']+\s?[.,!]*")  # Matches user mentions combined with 'thanks'
+re_url = re.compile(r"((git|ssh|http(s)?)|(git@[\w.]+))(:(//)?)([\w.@:/\-~#'?,+]+)(\.git)?(/)?")  # Matches urls
 re_no_english = re.compile(r'[^\sa-zA-Z0-9.!"#$%&\'()*+,-./:;<=>?@[\]^_`{|}~]')  # From ptrgn-commit-msg project
+re_version_number = re.compile(r'(\d+)\.(\d+)(?:\.(\d+))?(?:-(\w+)|-)?')
 
 conv: Converter = Converter()
+
+sent_detector = nltk.data.load('tokenizers/punkt/english.pickle')
 
 
 def clean_commit_message(msg: str) -> str:
@@ -43,7 +48,8 @@ def clean_commit_message(msg: str) -> str:
         msg = msg.partition(']')[-1]
 
     # Remove label with colon (at the start of the message)
-    msg = re_label_colon.sub('', msg)
+    # DISABLED: too many side effects
+    # msg = re_label_colon.sub('', msg)
 
     # Remove thanks messages
     msg = re_mention.sub('', msg)
@@ -69,50 +75,50 @@ def parse_commit_message(msg: str, nlp: Language) -> List[Token]:
         - Extract dependencies / word functions from message
     """
 
+    # Replace version numbers
+    msg = re_version_number.sub(constants.PREPROCESS_DIFF_TOKEN_VERSION, msg)
+
     # Run full SpaCy pipeline on message
-    doc = nlp(msg)
-
-    try:
-
-        # Get first sentence
-        span = next(doc.sents)
-        tokens: List[Token] = []
-
-        # Bail early if no first sentence
-        if len(span) == 0:
-            return tokens
-
-        # Generate a list of tokens we want to keep
-        for token in span:
-
-            # Remove unwanted PoS-tags
-            if token.pos in constants.PREPROCESS_IGNORE_POS:
-                continue
-
-            # Remove commit hashes
-            if is_sha1(token.text):
-                continue
-
-            # Replace version numbers
-            # TODO: may want to match more complex version numbers (like 1.2.3-RC.1), but that would be more suitable
-            # in an earlier stage of preprocessing.
-            if token.shape_ in ['d.d.d', 'd.d']:
-                token.lemma_ = constants.PREPROCESS_DIFF_TOKEN_VERSION
-                token.norm_ = constants.PREPROCESS_DIFF_TOKEN_VERSION
-
-            tokens.append(token)
-
-        # Bail if no valid tokens in message
-        if len(tokens) == 0:
-            return []
-
-        # Remove trailing punctuation
-        if tokens[-1].text in ".?!;:":
-            del tokens[-1]
-
-        return tokens
-    except StopIteration:
+    sents = sent_detector.tokenize(msg)
+    if len(sents) <= 0:
         return None
+
+    # Get first sentence
+    span = nlp(sents[0])
+    tokens: List[Token] = []
+
+    # Bail early if no first sentence
+    if len(span) == 0:
+        return tokens
+
+    last_non_punct_idx = 0
+    i = 0
+
+    # Generate a list of tokens we want to keep
+    for token in span:
+        # Remove unwanted PoS-tags
+        if token.pos in constants.PREPROCESS_IGNORE_POS:
+            continue
+
+        # Remove commit hashes
+        if is_sha1(token.text):
+            continue
+
+        i += 1
+
+        if token.text not in ['.', '..', '...', '?', '!', ';', ':', ',']:
+            last_non_punct_idx = i
+
+        tokens.append(token)
+
+    # Bail if no valid tokens in message
+    if len(tokens) == 0:
+        return []
+
+    # Remove trailing punctuation
+    tokens = tokens[0:last_non_punct_idx]
+
+    return tokens
 
 
 def _reduce_diff(lines: List[str]) -> (str, dict):
