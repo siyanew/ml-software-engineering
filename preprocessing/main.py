@@ -218,7 +218,7 @@ if __name__ == "__main__":
     # Process dataset in parallel
     print(f'Firing up {num_processes} processes...')
     with mp.Pool(num_processes) as pool:
-        pool.map(process_dataset, ds)
+        pool.map_async(process_dataset, ds).get()
 
     # Merge output files
     merge_output_files(ds_path)
