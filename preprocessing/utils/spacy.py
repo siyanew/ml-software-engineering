@@ -12,11 +12,10 @@ from preprocessing.constants import PREPROCESS_DIFF_TOKEN_VERSION as TOK_VERSION
 
 import re
 
-# Source: https://www.nltk.org/api/nltk.tokenize.html (nltk.WordPunctTokenizer)
+# Diff tokenizer regex. Improved by considering pairs of punctuation (e.g. ++, //, +=) as one token
+# Based on: https://www.nltk.org/api/nltk.tokenize.html (nltk.WordPunctTokenizer)
 # re_punct_tokens = re.compile(r'\w+|[^\w\s]+')
-
-# Better splitter (source: https://stackoverflow.com/a/43094210)
-re_punct_tokens = re.compile(r"\w+(?:'\w+)?|[^\w\s]")
+re_punct_tokens = re.compile(r'/\*{1,2}|\*/|[-+*/><!]=|[+-/&|]{2}|\w+|[^\w\s]{1}')
 
 
 def tokenize_diff(diff: str) -> List[str]:
