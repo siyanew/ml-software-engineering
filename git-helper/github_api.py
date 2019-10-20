@@ -8,8 +8,8 @@ from typing import Iterable
 from git import Repo, Commit
 from github import Github
 
-language = 'java'
-# language = 'c#'
+# language = 'java'
+language = 'c#'
 limit_amount_projects = 1000
 limit_amount_commits = 10000
 
@@ -20,8 +20,9 @@ github_api_key = "b92c53e6e67a5b20380843b98dabca329a2f8389"
 
 def parse_top_repos():
     repo_urls = get_top_projects()
+    print("Processes: %d" % processes)
     with Pool(processes) as pool:
-        p = pool.map_async(parse_repo, repo_urls)
+        p = pool.map_async(parse_repo, repo_urls, chunksize=1)
         try:
             p.get(0xFFFF)
         except KeyboardInterrupt:
@@ -31,27 +32,35 @@ def parse_top_repos():
 def get_top_projects() -> Iterable[str]:
     projects_file_path = os.path.join(output_path, "projects.txt")
 
-    if os.path.exists(projects_file_path):
-        with open(projects_file_path, encoding="utf-8") as file:
-            for line in file:
-                yield line.rstrip("\n")
-        return
-    # else:
-    os.makedirs(output_path)
+    if not os.path.exists(projects_file_path):
+        # get top projects from github
+        os.makedirs(output_path)
 
-    client = Github(github_api_key, per_page=100)
-    repos = client.search_repositories(query=f'language:{language}', sort='stars', order='desc')
-    repos = repos[:limit_amount_projects]
+        client = Github(github_api_key, per_page=100)
+        repos = client.search_repositories(query=f'language:{language}', sort='stars', order='desc')
 
-    with open(projects_file_path, "w+", encoding="utf-8") as file:
-        try:
-            for repo in repos:
-                repo_url = repo.clone_url
-                file.write(f"{repo_url}\n")
-                yield repo_url
-        except Exception as e:
-            cleanup_file(file)
-            raise e
+        # filter duplicates (happens for some reason) and call api until the project amount limit is reached.
+        repo_urls = set()
+        for repo in repos:
+            repo_url = repo.clone_url
+            repo_urls.add(repo_url)
+            if len(repo_urls) >= limit_amount_projects:
+                break
+
+        # save list to file
+        with open(projects_file_path, "w+", encoding="utf-8") as file:
+            try:
+                for repo_url in repo_urls:
+                    file.write(f"{repo_url}\n")
+            except Exception as e:
+                cleanup_file(file)
+                raise e
+
+    # yield all lines (repo urls)
+    with open(projects_file_path, encoding="utf-8") as file:
+        for line in file:
+            yield line.rstrip("\n")
+    return
 
 
 def parse_repo(url: str):
@@ -70,22 +79,31 @@ def parse_repo(url: str):
 
         repo = clone_repo(url)
         parse_repo_commits(repo)
+        repo.close()
         shutil.rmtree(repo_path)  # delete cloned repo after parsing
     except KeyboardInterrupt:
         print("KeyboardInterrupt in parse_repo", url)
+        try:
+            repo.close()
+        except Exception:
+            pass
         cleanup_repo(url)
         return
     except Exception as e:
+        print(url, "Exception\n", e)
+        try:
+            repo.close()
+        except Exception:
+            pass
         cleanup_repo(url)
-        print(url, e)
-        raise e
+        return
 
 
 def clone_repo(url: str) -> Repo:
     print(url, "Cloning...")
 
     repo_path = url_to_repo_path(url)
-    repo = Repo.clone_from(url, repo_path)
+    repo = Repo.clone_from(url, repo_path, multi_options=['--no-checkout'])
 
     print(url, "Cloning done.")
     return repo
