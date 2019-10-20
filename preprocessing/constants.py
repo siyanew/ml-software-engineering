@@ -2,7 +2,7 @@ import os
 from spacy.symbols import SPACE
 
 # RUN CONFIGURATION
-DEBUG = True
+DEBUG = False
 DATASET = 'demo'
 OUTPUT_ENCODING = 'utf-8'
 SPACY_LANGUAGE_MODEL = 'en_core_web_sm'

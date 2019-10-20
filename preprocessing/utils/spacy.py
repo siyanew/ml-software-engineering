@@ -29,7 +29,7 @@ def tokens_to_string(tokens: Iterable[Token]) -> str:
     return ' '.join([token.norm_ for token in tokens])
 
 
-def _add_special_tokenizer_cases(nlp: Language) -> Language:
+def add_special_tokenizer_cases(nlp: Language) -> Language:
     nlp.tokenizer.add_special_case('==', [{ORTH: '==', NORM: '==', POS: SYM}])
     nlp.tokenizer.add_special_case('+=', [{ORTH: '+=', NORM: '+=', POS: SYM}])
     nlp.tokenizer.add_special_case('-=', [{ORTH: '-=', NORM: '-=', POS: SYM}])

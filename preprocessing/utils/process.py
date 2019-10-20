@@ -7,6 +7,7 @@ from spacy.language import Language
 from spacy.tokens import Token
 
 from preprocessing import constants
+from preprocessing.utils.converter import Converter
 from preprocessing.utils.spacy import is_sha1
 
 # Compiled regexes
@@ -19,6 +20,8 @@ re_mention = re.compile(
     r"((thanks\s?)(\s?to\s?)?)?\@[a-z0-9']+\s?[.,!]*")  # Matches user mentions combined with 'thanks'
 re_url = re.compile(r"((git|ssh|http(s)?)|(git@[\w\.]+))(:(//)?)([\w\.@\:/\-~#'?,+]+)(\.git)?(/)?")  # Matches urls
 re_no_english = re.compile(r'[^\sa-zA-Z0-9.!"#$%&\'()*+,-./:;<=>?@[\]^_`{|}~]')  # From ptrgn-commit-msg project
+
+conv: Converter = Converter()
 
 
 def clean_commit_message(msg: str) -> str:
@@ -50,6 +53,9 @@ def clean_commit_message(msg: str) -> str:
 
     # Remove "non-English" characters
     msg = re_no_english.sub('', msg)
+
+    # Split sub-tokens
+    msg = conv.splitSubTokens(msg)
 
     # Remove any remaining starting and trailing whitespace
     msg = msg.strip()
@@ -161,6 +167,9 @@ def _reduce_diff(lines: List[str]) -> (str, dict):
 
                 meta['ext_count'][filetype] += 1
 
+                # Remove "non-English" characters and split sub-tokens
+                filename = conv.splitSubTokens(re_no_english.sub('', filename))
+
                 # Retain just the filename for valid files
                 block_lines.append(f'{constants.PREPROCESS_DIFF_TOKEN_FILE} {filename.lower()}')
 
@@ -177,11 +186,10 @@ def _reduce_diff(lines: List[str]) -> (str, dict):
 
                     change = line[1:].strip()
 
-                    # Remove "non-English" characters
-                    change = re_no_english.sub('', change)
+                    # Remove "non-English" characters and split sub-tokens
+                    change = conv.splitSubTokens(re_no_english.sub('', change))
 
-                    # Discard empty lines
-                    if change:
+                    if change:  # Keep if not empty
                         if line[0] == '-':
                             meta['deletions'] += 1
                             block_lines.append(f'{constants.PREPROCESS_DIFF_TOKEN_DEL} {change.lower()}')
@@ -203,8 +211,8 @@ def _reduce_diff(lines: List[str]) -> (str, dict):
                     # Remove whitespace and trailing accolades / commas
                     context = context.strip().rstrip('{,')
 
-                    # Remove "non-English" characters
-                    context = re_no_english.sub('', context)
+                    # Remove "non-English" characters and split sub-tokens
+                    context = conv.splitSubTokens(re_no_english.sub('', context))
 
                     if context:  # Keep if not empty
                         block_lines.append(context.lower())

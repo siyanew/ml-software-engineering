@@ -1,6 +1,7 @@
 import pathlib
 import sys
 import time
+from multiprocessing import current_process
 from typing import List
 import orjson
 
@@ -9,10 +10,11 @@ from spacy.language import Language
 from spacy.tokens import Token
 
 from preprocessing import constants
-from preprocessing.utils.dataset import read_dataset
+from preprocessing.utils import dataset
+from preprocessing.utils.dataset import read_dataset, merge_output_files
 from preprocessing.utils.filter import filter_message_pre, filter_message_post, filter_diff_pre
 from preprocessing.utils.process import clean_commit_message, parse_commit_message, clean_diff, parse_diff
-from preprocessing.utils.spacy import tokens_to_string, _add_special_tokenizer_cases
+from preprocessing.utils.spacy import tokens_to_string, add_special_tokenizer_cases
 
 import multiprocessing as mp
 
@@ -59,7 +61,71 @@ def process_diff(raw_diff: bytes):
     return diff_str, meta
 
 
-def process_dataset(dataset: dict):
+def process_dataset(dataset: List[tuple]):
+    # Return if dataset is empty
+    if len(dataset) <= 0:
+        return
+
+    proc = current_process()
+    proc_id = proc._identity[0]
+
+    p = pathlib.Path(constants.DATA_DIR, constants.DATASET)
+
+    # Load spacy
+    print("Loading SpaCy...")
+    using_gpu = spacy.prefer_gpu()
+    nlp = spacy.load(constants.SPACY_LANGUAGE_MODEL, disable=["ner", "textcat"])
+    nlp = add_special_tokenizer_cases(nlp)
+    print("Using GPU: {}".format(using_gpu))
+
+    # Open write handlers for result files
+    fh_msg = p.joinpath(f'{constants.DATASET}.processed.msg.part{proc_id}').open('a', encoding=constants.OUTPUT_ENCODING, buffering=1)
+    fh_diff = p.joinpath(f'{constants.DATASET}.processed.diff.part{proc_id}').open('a', encoding=constants.OUTPUT_ENCODING, buffering=1)
+    fh_diff_meta = p.joinpath(f'{constants.DATASET}.diff.meta.jsonl.part{proc_id}').open('a', encoding=constants.OUTPUT_ENCODING, buffering=1)
+
+    # Iterate over repositories (in commit messages folder)
+    for repo, entry in dataset:
+
+        msg_path = p.joinpath('msg', repo)
+        diff_path = p.joinpath('diff', repo)
+
+        # Process commit
+        with msg_path.joinpath(f'{entry}.msg').open('r', encoding=constants.OUTPUT_ENCODING, errors='ignore') as f:
+            msg = process_commit(f.read(), nlp)
+
+        # Bail early if message cannot be processed
+        if not msg:
+            continue
+
+        # Process diff
+        with diff_path.joinpath(f'{entry}.diff').open('rb') as f:
+            data = f.read()
+            diff, meta = process_diff(data)
+
+        # Bail if diff cannot be processed
+        if not diff:
+            continue
+
+        if meta:  # Dump metadata if any (commit could be filtered by preliminary filter)
+            meta['id'] = str(entry)
+            meta['ext_count'] = dict(meta['ext_count'])  # Can't serialize defaultdict, so convert to regular dict
+            fh_diff_meta.write(f'{str(orjson.dumps(meta), constants.OUTPUT_ENCODING)}\n')
+
+        # Write results to file
+        if constants.DEBUG:
+            fh_msg.write(f'{entry}: {msg}\n')
+            fh_diff.write(f'{entry}: {diff}\n')
+        else:
+            fh_msg.write(f'{msg}\n')
+            fh_diff.write(f'{diff}\n')
+
+    # Close result file handlers
+    fh_msg.close()
+    fh_diff.close()
+    fh_diff_meta.close()
+
+
+def process_dataset_old(dataset: dict):
     # Return if dataset is empty
     if not dataset:
         return
@@ -70,13 +136,13 @@ def process_dataset(dataset: dict):
     print("Loading SpaCy...")
     using_gpu = spacy.prefer_gpu()
     nlp = spacy.load(constants.SPACY_LANGUAGE_MODEL, disable=["ner", "textcat"])
-    nlp = _add_special_tokenizer_cases(nlp)
+    nlp = add_special_tokenizer_cases(nlp)
     print("Using GPU: {}".format(using_gpu))
 
     # Open write handlers for result files
-    fh_msg = p.joinpath(constants.DATASET + '.processed.msg').open('a', encoding=constants.OUTPUT_ENCODING)
-    fh_diff = p.joinpath(constants.DATASET + '.processed.diff').open('a', encoding=constants.OUTPUT_ENCODING)
-    fh_diff_meta = p.joinpath(constants.DATASET + '.diff.meta.jsonl').open('a', encoding=constants.OUTPUT_ENCODING)
+    fh_msg = p.joinpath(constants.DATASET + '.processed.msg').open('a', encoding=constants.OUTPUT_ENCODING, buffering=1)
+    fh_diff = p.joinpath(constants.DATASET + '.processed.diff').open('a', encoding=constants.OUTPUT_ENCODING, buffering=1)
+    fh_diff_meta = p.joinpath(constants.DATASET + '.diff.meta.jsonl').open('a', encoding=constants.OUTPUT_ENCODING, buffering=1)
 
     # Iterate over repositories (in commit messages folder)
     for repo, ids in dataset.items():
@@ -127,38 +193,6 @@ def process_dataset(dataset: dict):
     fh_diff_meta.close()
 
 
-def _check_results_file(p: pathlib.Path, force=False) -> bool:
-    msg_results = p.joinpath(constants.DATASET + '.processed.msg')
-    diff_results = p.joinpath(constants.DATASET + '.processed.diff')
-    diff_results_meta = p.joinpath(constants.DATASET + '.diff.meta.jsonl')
-
-    if (msg_results.exists() and msg_results.stat().st_size > 0) \
-            or (diff_results.exists() and diff_results.stat().st_size > 0) \
-            or (diff_results_meta.exists() and diff_results_meta.stat().st_size > 0):
-
-        if force:
-            msg_results.unlink()
-            diff_results.unlink()
-            diff_results_meta.unlink()
-            return True
-
-        print("\nOne or more result files exist and are not empty.")
-        choice = input("Clear these files and continue? [y/N] ")
-
-        if choice.lower() == 'y':
-            msg_results.unlink()
-            diff_results.unlink()
-            diff_results_meta.unlink()
-            print("\nFiles removed.")
-            return True
-        else:
-            print("\nNo changes have been made.")
-            return False
-
-    # Nothing on the hand
-    return True
-
-
 if __name__ == "__main__":
     """Preprocess commit + diff datasets."""
 
@@ -171,10 +205,9 @@ if __name__ == "__main__":
     ds, num_ids = read_dataset(ds_path, num_partitions=num_processes)
 
     print(f'Processing dataset "{constants.DATASET}" with {num_ids} commits')
-    print(f'Firing up {num_processes} processes...')
 
     # Check if results file is empty
-    if not _check_results_file(ds_path, force=constants.DEBUG):
+    if not dataset.check_results_file(ds_path, force=constants.DEBUG):
         print("Exiting...")
         sys.exit(0)
     else:
@@ -183,7 +216,11 @@ if __name__ == "__main__":
     start_time = time.time()
 
     # Process dataset in parallel
+    print(f'Firing up {num_processes} processes...')
     with mp.Pool(num_processes) as pool:
         pool.map(process_dataset, ds)
+
+    # Merge output files
+    merge_output_files(ds_path)
 
     print(f"\n\nPreprocessing finished in {time.time() - start_time:.1f} seconds!")
