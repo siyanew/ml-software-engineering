@@ -1,8 +1,7 @@
+import os
 import pathlib
 import numpy as np
 from typing import List
-
-from preprocessing.constants import DATASET
 
 
 def read_dataset(path_to_dataset: pathlib.Path, num_partitions=1) -> (List[tuple], int):
@@ -125,6 +124,7 @@ def _select_partition(num: int, partitions: List[int]) -> int:
 
 
 def check_results_file(p: pathlib.Path, force=False) -> bool:
+    DATASET = os.path.basename(str(p))
     msg_results = p.joinpath(DATASET + '.processed.msg')
     diff_results = p.joinpath(DATASET + '.processed.diff')
     diff_results_meta = p.joinpath(DATASET + '.diff.meta.jsonl')
@@ -157,6 +157,7 @@ def check_results_file(p: pathlib.Path, force=False) -> bool:
 
 
 def merge_output_files(output_dir: pathlib.Path) -> None:
+    DATASET = os.path.basename(str(output_dir))
     _merge_and_delete_files(output_dir, DATASET + '.processed.msg')
     _merge_and_delete_files(output_dir, DATASET + '.processed.diff')
     _merge_and_delete_files(output_dir, DATASET + '.diff.meta.jsonl')

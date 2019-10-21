@@ -10,7 +10,6 @@ SPACY_LANGUAGE_MODEL = 'en_core_web_sm'
 # DIRECTORIES
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(ROOT_DIR, 'data')
-DB_DIR = os.path.join(ROOT_DIR, 'db')
 
 # ---
 
