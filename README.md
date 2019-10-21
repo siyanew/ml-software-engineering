@@ -4,15 +4,24 @@ Analytics and Machine Learning for Software Engineering
 ## Preprocessing
 First install the required dependencies:
 
+```bash
+pip install -r requirements.txt
 ```
-conda install -c conda-forge spacy
+
+Or with pipenv:
+
+```bash
+pipenv install
+pipenv shell
+```
+
+And download the spacy model:
+```bash
 python -m spacy download en_core_web_sm
-conda install -c anaconda nltk
-pip install --upgrade orjson
 ```
 
 Then start a Python shell and run the following commands:
-```
+```python
 import nltk
 nltk.download('punkt')
 ```
