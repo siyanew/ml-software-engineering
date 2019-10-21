@@ -2,3 +2,4 @@ PyGithub==1.43.8
 spacy>=2.2.1
 spacy[cuda]>=2.2.1
 orjson>=2.0.11
+nltk==3.4.5
