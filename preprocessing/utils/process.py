@@ -78,12 +78,12 @@ def parse_commit_message(msg: str, nlp: Language) -> List[Token]:
     # Replace version numbers
     msg = re_version_number.sub(constants.PREPROCESS_DIFF_TOKEN_VERSION, msg)
 
-    # Run full SpaCy pipeline on message
+    # Split sentences with NLTK
     sents = sent_detector.tokenize(msg)
     if len(sents) <= 0:
         return None
 
-    # Get first sentence
+    # Run full SpaCy pipeline on first sentence
     span = nlp(sents[0])
     tokens: List[Token] = []
 
