@@ -1,9 +1,9 @@
 import os
 from pathlib import Path
-from typing import Tuple
+from typing import List, Tuple
 
 import dill
-from torchtext.data import Field
+from torchtext.data import Dataset, Field
 
 SRC_FILE = 'src'
 TRG_FILE = 'trg'
@@ -55,3 +55,20 @@ def save_vocabs(data_dir: str, SRC: Field, TRG: Field, sizes: Tuple[int, int], f
     print(f"Writing preprocessed vocabs to ${trg_path}...")
     with open(trg_path, 'wb+') as f:
         dill.dump(TRG, f)
+
+
+def tokenize_diff(text: str) -> List[str]:
+    return text.split(" ")
+
+
+def tokenize_msg(text: str) -> List[str]:
+    return text.split(" ")
+
+
+def save_dataset(data_dir: str, dataset: Dataset, fname="test"):
+    save_path = Path(data_dir)
+    with open(save_path / f"{fname}.diff", 'w+') as src_file, \
+            open(save_path / f"{fname}.msg", 'w+') as trg_file:
+        for example in dataset.examples:
+            print(" ".join(example.src), file=src_file)
+            print(" ".join(example.trg), file=trg_file)

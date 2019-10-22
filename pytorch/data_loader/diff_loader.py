@@ -1,3 +1,5 @@
+import glob
+from random import Random
 from typing import Tuple
 
 import torch
@@ -5,13 +7,19 @@ from torchtext.data import BucketIterator, Field
 from torchtext.datasets import TranslationDataset
 
 from base import BaseTextIterator
-from data_loader.utils import has_vocabs, load_vocabs, save_vocabs, tokenize_diff, tokenize_msg
+from data_loader.utils import has_vocabs, load_vocabs, save_dataset, save_vocabs, tokenize_diff, tokenize_msg
 
 
-class NMT1Loader(BaseTextIterator):
-    def __init__(self, data_dir: str, packed: bool,
-                 vocab_max_sizes: Tuple[int, int], vocab_min_freqs: Tuple[int, int],
-                 batch_sizes: Tuple[int, int, int], test: bool = False):
+class DiffLoader(BaseTextIterator):
+    def __init__(self,
+                 data_dir: str,
+                 file_path: str,
+                 packed: bool,
+                 split_ratio: Tuple[float, float, float],
+                 vocab_max_sizes: Tuple[int, int],
+                 vocab_min_freqs: Tuple[int, int],
+                 batch_sizes: Tuple[int, int, int],
+                 test: bool = False):
         print(f"Creating DataLoader for {'testing' if test else 'training'}")
 
         # Rebuild the vocabs during testin, as the saved can be build from a different config
@@ -40,13 +48,18 @@ class NMT1Loader(BaseTextIterator):
                         lower=True)
 
         print("Loading commit data...")
-        train_data, valid_data, test_data = TranslationDataset.splits(
+        dataset = TranslationDataset(
             exts=('.diff', '.msg'),
-            train='TrainingSet/train.26208',
-            validation='TrainingSet/valid.3000',
-            test='TestSet/test.3000',
             fields=(SRC, TRG),
-            path=data_dir)
+            path=file_path)
+        print(f"Total objects in dataset: {len(dataset)}")
+
+        state = Random(42)
+        (train_data, valid_data, test_data) = dataset.split(split_ratio=split_ratio, random_state=state.getstate())
+
+        if not glob.glob(f"{data_dir}test.*"):
+            print(f"Writing test split to file")
+            save_dataset(data_dir, test_data)
 
         if not vocab_exists:
             # Build vocabs

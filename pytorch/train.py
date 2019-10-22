@@ -1,5 +1,6 @@
 import argparse
 import collections
+import random
 
 import numpy as np
 import torch
@@ -15,6 +16,7 @@ torch.manual_seed(SEED)
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 np.random.seed(SEED)
+random.seed(SEED)
 
 # Fix GPU problems by first calling current_device()
 # https://github.com/pytorch/pytorch/issues/17108
