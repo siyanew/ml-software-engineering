@@ -55,7 +55,10 @@ class DiffLoader(BaseTextIterator):
         print(f"Total objects in dataset: {len(dataset)}")
 
         state = Random(42)
-        (train_data, valid_data, test_data) = dataset.split(split_ratio=split_ratio, random_state=state.getstate())
+        keep, remove = dataset.split(36000 / len(dataset), random_state=state.getstate())
+        print(f"Kept: {len(keep)} - Removed: {len(remove)}")
+
+        (train_data, valid_data, test_data) = keep.split(split_ratio=split_ratio, random_state=state.getstate())
 
         if not glob.glob(f"{data_dir}test.*"):
             print(f"Writing test split to file")
