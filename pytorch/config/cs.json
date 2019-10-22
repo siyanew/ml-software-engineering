@@ -7,8 +7,8 @@
     "class_name": "Model",
     "packed": true,
     "args": {
-      "input_dim": 0,
-      "output_dim": 0,
+      "input_dim": 24521,
+      "output_dim": 11382,
       "enc_emb_dim": 256,
       "dec_emb_dim": 256,
       "enc_hid_dim": 512,
@@ -23,7 +23,7 @@
     "iterator": true,
     "args": {
       "data_dir": "data/Top1000-C#/",
-      "file_path": "data/Top1000-C#/cs-top-1000.processed",
+      "file_path": "data/Top1000-C#/cs-top-1000.processed.short",
       "packed": true,
       "split_ratio": [
         0.8,
