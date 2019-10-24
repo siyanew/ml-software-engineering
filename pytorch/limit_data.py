@@ -4,10 +4,10 @@ if __name__ == '__main__':
     DIFF_TOKENS = 100
     MSG_TOKENS = 30
 
-    src_path = 'data/Top1000-C#/cs-top-1000.processed.diff'
-    trg_path = 'data/Top1000-C#/cs-top-1000.processed.msg'
-    src_path_short = 'data/Top1000-C#/cs-top-1000.processed.100.diff'
-    trg_path_short = 'data/Top1000-C#/cs-top-1000.processed.30.msg'
+    src_path = 'data/jiang_full/jiang-full.processed.diff'
+    trg_path = 'data/jiang_full/jiang-full.processed.msg'
+    src_path_short = 'data/jiang_full/jiang-full.processed.short.diff'
+    trg_path_short = 'data/jiang_full/jiang-full.processed.short.msg'
 
     src_file = open(src_path, 'r', encoding='utf-8')
     trg_file = open(trg_path, 'r', encoding='utf-8')
