@@ -254,7 +254,8 @@ def parse_diff(diff: str, meta: dict) -> (List[str], dict):
 
     meta['total_tokens'] = len(tokens) if tokens else 0
 
-    # Limit the number of tokens in diff
-    tokens = tokens[:constants.PREPROCESS_DIFF_NUM_TOKEN_CUTOFF]
+    # Filter on the number of tokens in the diff
+    if len(tokens) >= constants.PREPROCESS_DIFF_NUM_TOKEN_CUTOFF:
+        return None
 
     return tokens, meta
