@@ -218,8 +218,7 @@ if __name__ == '__main__':
 
     output_path = os.path.join(output_path, f"{language}-top-{limit_amount_projects}")
     path_bare_repos = os.path.join(output_path, "bare_repos")
-    path_extracted_commits = os.path.join(output_path, "extracted_commits")
-    path_msg = os.path.join(path_extracted_commits, "msg")
-    path_diff = os.path.join(path_extracted_commits, "diff")
+    path_msg = os.path.join(output_path, "msg")
+    path_diff = os.path.join(output_path, "diff")
 
     parse_top_repos()
