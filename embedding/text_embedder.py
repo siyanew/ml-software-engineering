@@ -3,8 +3,6 @@ import numpy as np
 from typing import List
 import word2vec
 
-from data.commit import Commit
-
 train_file = "./model_data/commit_msgs_train.txt"
 model_output_file = './model_data/trained_test_embedding.bin'
 word_vector_size = 10
@@ -47,7 +45,7 @@ class TextEmbedder:
 
 
 # Example usage:
-commit_list = [Commit('', '', '', 'Fixed a bug regarding blabla'), Commit('', '', '', 'Cleaned up the code')]
-text_embedder = TextEmbedder()
-text_embedder.train_embedding(commit_list)
-text_embedder.embed('Fixed a bug and cleaned up the code')
+# commit_list = [Commit('', '', '', 'Fixed a bug regarding blabla'), Commit('', '', '', 'Cleaned up the code')]
+# text_embedder = TextEmbedder()
+# text_embedder.train_embedding(commit_list)
+# text_embedder.embed('Fixed a bug and cleaned up the code')
