@@ -57,7 +57,7 @@ The configuration used in this research are the following:
 * NMT1 but preprocessed with our preprocessing: `config/nmt1_preprocessed.json`
 
 ## Research artifacts (datasets, models, results)
-The collected datasets, the trained model, and all of the testing results are available online at [Zenodo]()
+The collected datasets, the trained model, and all of the testing results are available online at [Zenodo](https://zenodo.org/record/3519363)
 
 ## Resources
 The following resources were used during creating of this codebase:
