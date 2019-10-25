@@ -1,4 +1,4 @@
-import os
+import itertools
 import pathlib
 import sys
 import time
@@ -64,15 +64,16 @@ def process_diff(raw_diff: bytes):
     return diff_str, meta
 
 
-def process_dataset(dataset: List[tuple]):
+def process_dataset(args):
+    dataset: List[tuple] = args[0]
+    p: pathlib.Path = args[1]
+
     # Return if dataset is empty
     if len(dataset) <= 0:
         return
 
     proc = current_process()
     proc_id = proc._identity[0]
-
-    p = pathlib.Path(constants.DATA_DIR, constants.DATASET)
 
     # Load spacy
     print("Loading SpaCy...")
@@ -82,9 +83,9 @@ def process_dataset(dataset: List[tuple]):
     print("Using GPU: {}".format(using_gpu))
 
     # Open write handlers for result files
-    fh_msg = p.joinpath(f'{constants.DATASET}.processed.msg.part{proc_id}').open('a', encoding=constants.OUTPUT_ENCODING, buffering=1)
-    fh_diff = p.joinpath(f'{constants.DATASET}.processed.diff.part{proc_id}').open('a', encoding=constants.OUTPUT_ENCODING, buffering=1)
-    fh_diff_meta = p.joinpath(f'{constants.DATASET}.diff.meta.jsonl.part{proc_id}').open('a', encoding=constants.OUTPUT_ENCODING, buffering=1)
+    fh_msg = p.joinpath(f'{p.name}.processed.msg.part{proc_id}').open('a', encoding=constants.OUTPUT_ENCODING, buffering=1)
+    fh_diff = p.joinpath(f'{p.name}.processed.diff.part{proc_id}').open('a', encoding=constants.OUTPUT_ENCODING, buffering=1)
+    fh_diff_meta = p.joinpath(f'{p.name}.diff.meta.jsonl.part{proc_id}').open('a', encoding=constants.OUTPUT_ENCODING, buffering=1)
 
     # Iterate over repositories (in commit messages folder)
     for repo, entry in dataset:
@@ -139,11 +140,11 @@ if __name__ == "__main__":
 
     # Prefer command line argument for dataset path if given
     if len(sys.argv) > 1:
-        ds_path = pathlib.Path(sys.argv[1])
-        constants.DATASET = ds_path.name
-        constants.DATA_DIR = str(ds_path)
+        ds_path = pathlib.Path(sys.argv[1]).resolve()
+        DATASET = ds_path.name
     else:
-        ds_path = pathlib.Path(constants.DATA_DIR, constants.DATASET)
+        DATASET = constants.DATASET
+        ds_path = pathlib.Path(constants.DATA_DIR, DATASET).resolve()
 
     print("Started preprocessing script. Calculating dataset size...")
     num_processes = mp.cpu_count()
@@ -155,10 +156,10 @@ if __name__ == "__main__":
         print("ERROR: Cannot find specified dataset.")
         sys.exit(-1)
 
-    print(f'Processing dataset "{constants.DATASET}" with {num_ids} commits')
+    print(f'Processing dataset "{DATASET}" with {num_ids} commits')
 
     # Check if results file is empty
-    if not dataset.check_results_file(ds_path, force=constants.DEBUG):
+    if not dataset.check_results_file(ds_path, DATASET, force=constants.DEBUG):
         print("Exiting...")
         sys.exit(0)
     else:
@@ -169,9 +170,9 @@ if __name__ == "__main__":
     # Process dataset in parallel
     print(f'Firing up {num_processes} processes...')
     with mp.Pool(num_processes) as pool:
-        pool.map_async(process_dataset, ds).get()
+        pool.map_async(process_dataset, zip(ds, itertools.repeat(ds_path))).get()
 
     # Merge output files
-    merge_output_files(ds_path)
+    merge_output_files(ds_path, DATASET)
 
     print(f"\n\nPreprocessing finished in {time.time() - start_time:.1f} seconds!")

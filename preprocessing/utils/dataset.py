@@ -48,10 +48,10 @@ def read_dataset(path_to_dataset: pathlib.Path, num_partitions=1) -> (List[tuple
     return chunker_list(data, num_partitions), total_commits
 
 
-def check_results_file(p: pathlib.Path, force=False) -> bool:
-    msg_results = p.joinpath(constants.DATASET + '.processed.msg')
-    diff_results = p.joinpath(constants.DATASET + '.processed.diff')
-    diff_results_meta = p.joinpath(constants.DATASET + '.diff.meta.jsonl')
+def check_results_file(p: pathlib.Path, dataset: str, force=False) -> bool:
+    msg_results = p.joinpath(dataset + '.processed.msg')
+    diff_results = p.joinpath(dataset + '.processed.diff')
+    diff_results_meta = p.joinpath(dataset + '.diff.meta.jsonl')
 
     if (msg_results.exists() and msg_results.stat().st_size > 0) \
             or (diff_results.exists() and diff_results.stat().st_size > 0) \
@@ -80,8 +80,7 @@ def check_results_file(p: pathlib.Path, force=False) -> bool:
     return True
 
 
-def merge_output_files(output_dir: pathlib.Path) -> None:
-    dataset = output_dir.name
+def merge_output_files(output_dir: pathlib.Path, dataset: str) -> None:
     _merge_and_delete_files(output_dir, dataset + '.processed.msg')
     _merge_and_delete_files(output_dir, dataset + '.processed.diff')
     _merge_and_delete_files(output_dir, dataset + '.diff.meta.jsonl')
