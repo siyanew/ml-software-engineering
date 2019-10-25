@@ -1,6 +1,6 @@
 from torch.nn.init import constant_, normal_, uniform_
 
-from base import BaseModel
+from pytorch.base import BaseModel
 
 
 def uniform(m: BaseModel, a: float, b: float):

@@ -1,14 +1,14 @@
 {
-  "name": "c_sharp",
-  "notes": "",
+  "name": "nmt1_preprocessed",
+  "notes": "NMT1 dataset from jiang et al. but preprocessed with our own preprocessor.",
   "n_gpu": 1,
   "arch": {
-    "file": "model.seq2seq.packed_and_attention",
+    "file": "pytorch.model.seq2seq.packed_and_attention",
     "class_name": "Model",
     "packed": true,
     "args": {
-      "input_dim": 24521,
-      "output_dim": 11382,
+      "input_dim": 28672,
+      "output_dim": 14817,
       "enc_emb_dim": 256,
       "dec_emb_dim": 256,
       "enc_hid_dim": 512,
@@ -18,12 +18,12 @@
     }
   },
   "data_loader": {
-    "file": "data_loader.diff_loader",
+    "file": "pytorch.data_loader.diff_loader",
     "class_name": "DiffLoader",
     "iterator": true,
     "args": {
-      "data_dir": "data/Top1000-C#/",
-      "file_path": "data/Top1000-C#/cs-top-1000.processed.short",
+      "data_dir": "data/jiang_full/",
+      "file_path": "data/jiang_full/jiang-full.processed.short",
       "packed": true,
       "split_ratio": [
         0.8,
@@ -73,8 +73,8 @@
     "tensorboard": true
   },
   "inference": {
-    "src_file": "data/Top1000-C#/test.diff",
-    "trg_file": "data/Top1000-C#/test.msg",
-    "pred_file": "data/Top1000-C#/test.pred"
+    "src_file": "data/jiang_full/test.diff",
+    "trg_file": "data/jiang_full/test.msg",
+    "pred_file": "data/jiang_full/test.pred"
   }
 }

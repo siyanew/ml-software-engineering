@@ -6,7 +6,7 @@ from torch import nn as nn, torch
 from torchtext.data import Batch
 
 from base import BaseModel
-from model.init_weights import uniform
+from pytorch.model.init_weights import uniform
 
 
 class Model(BaseModel):

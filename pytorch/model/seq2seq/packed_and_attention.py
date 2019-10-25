@@ -7,10 +7,14 @@ import torch.nn.functional as F
 from torch import Tensor
 from torchtext.data import Batch
 
-from base import BaseModel
+from pytorch.base import BaseModel
 
 
 class Model(BaseModel):
+    """
+    The same model as in pytorch.model.seq2seq.attention.py, but now with masking and packing of sentences
+
+    """
     def __init__(self, input_dim: int, output_dim: int,
                  enc_emb_dim: int, dec_emb_dim: int,
                  enc_hid_dim: int, dec_hid_dim: int,
