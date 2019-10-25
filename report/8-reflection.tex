@@ -1,0 +1,8 @@
+\section{Reflection}
+Before arriving at our current approach, we had some other ideas about how we could tackle this problem. We looked at existing models,  such as Word2Vec \cite{mikolov2013efficient}, Code2Vec \cite{alon2018code2vec} and Code2Seq \cite{alon2018code2seq}. The idea was to use these models to embed the code before and after a commit and use a combination of these embeddings to represent the change in the code. Then, we could train a model on this embedding of the change to generate commit messages. 
+
+In the end, it was not feasible to implement this for a set of (partial) code changes, of which a diff consists. This would result in a variable amount of change embeddings, which would be hard to combine into a single embedding which would still represent the commit. Also, while experimenting with Code2Vec and Code2Seq, we encountered the limitation of only being able to embed small functions and no full source code files. This made both models unusable for our problem.
+
+With regard to training models, we had to make some compromises. We lowered the amount of dimensions for our reproduction of the model of \citeauthor{jiang_automatically_2017} \cite{jiang_automatically_2017}, because of memory limitations. Since we could only train on one PC -- with one GPU -- that was powerful enough, we did not have time to train all the models that would have made an interesting comparison. An improvement for future editions of this course could be to provide credits for cloud services, which can potentially be acquired for free for academic purposes.
+
+Also, two weeks before the deadline, one of our team members unfortunately had to leave the team, which left us with more work to do than we expected.

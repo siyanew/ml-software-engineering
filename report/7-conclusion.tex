@@ -1,0 +1,23 @@
+\section{Conclusion}\label{sec:conclusion}
+The purposes of the current research were (1) to determine if the neural approach to generate commit messages from code changes, as presented by \citet{jiang_automatically_2017}, was reproducible and (2) to investigate if more rigorous preprocessing techniques would improve the performance of the model.
+
+Experiments showed that a reproduction of the attentional RNN encoder-decoder model from \citet{jiang_automatically_2017} achieves slightly better results on the same dataset. This confirms the reproducibility of \cite{jiang_automatically_2017} under similar circumstances.
+
+To answer the second question, an alternative preprocessing method was proposed in an effort to better clean and remove noisy commits from the original dataset. Furthermore, two new datasets were collected from GitHub, one containing commits from the Top 1000 Java projects and one with commits from the Top 1000 C\# projects, to compare the impact of the novel preprocessing on different datasets.
+
+However, the model was unable to generate commit messages of high quality for any input dataset that was processed with the novel technique. The BLEU score dropped by at least 78\% for any dataset. This exposed the underlying problem of the original model, which seems to score high by remembering (long) path names and frequently occurring messages from the training set.
+
+Automated commit message generation is therefore still very much an open problem. Different code change embeddings, for example by embedding the before and after state of the code separately, or focusing on specific types of commits, could improve the quality of generated commit messages in the future.
+
+% - Repeat the objective/main question
+% - Draw your conclusion by answering the
+%   objective/main question
+% - Support your conclusion
+% - Mention limitations/implications/recommendations
+
+% Moreover:
+% - The conclusion should be understandable independently from the core chapters
+% - The conclusion should not contain new information
+
+
+

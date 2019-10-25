@@ -1,0 +1,426 @@
+
+@article{jiang_automatically_2017,
+	title = {Automatically {Generating} {Commit} {Messages} from {Diffs} using {Neural} {Machine} {Translation}},
+	abstract = {Commit messages are a valuable resource in comprehension of software evolution, since they provide a record of changes such as feature additions and bug repairs. Unfortunately, programmers often neglect to write good commit messages. Different techniques have been proposed to help programmers by automatically writing these messages. These techniques are effective at describing what changed, but are often verbose and lack context for understanding the rationale behind a change. In contrast, humans write messages that are short and summarize the high level rationale. In this paper, we adapt Neural Machine Translation (NMT) to automatically “translate” diffs into commit messages. We trained an NMT algorithm using a corpus of diffs and human-written commit messages from the top 1k Github projects. We designed a ﬁlter to help ensure that we only trained the algorithm on higher-quality commit messages. Our evaluation uncovered a pattern in which the messages we generate tend to be either very high or very low quality. Therefore, we created a quality-assurance ﬁlter to detect cases in which we are unable to produce good messages, and return a warning instead.},
+	language = {en},
+	urldate = {2019-09-18},
+	journal = {arXiv:1708.09492 [cs]},
+	author = {Jiang, Siyuan and Armaly, Ameer and McMillan, Collin},
+	month = aug,
+	year = {2017},
+	note = {arXiv: 1708.09492},
+	keywords = {Computer Science - Computation and Language, Computer Science - Software Engineering},
+	annote = {Comment: Preprint version. Accepted in ASE 2017, the 32nd IEEE/ACM International Conference on Automated Software Engineering}
+}
+
+@article{allamanis_survey_2018,
+	title = {A {Survey} of {Machine} {Learning} for {Big} {Code} and {Naturalness}},
+	volume = {51},
+	issn = {03600300},
+	doi = {10.1145/3212695},
+	language = {en},
+	number = {4},
+	urldate = {2019-09-18},
+	journal = {ACM Computing Surveys},
+	author = {Allamanis, Miltiadis and Barr, Earl T. and Devanbu, Premkumar and Sutton, Charles},
+	month = jul,
+	year = {2018},
+	pages = {1--37}
+}
+
+@inproceedings{jiang_towards_2017,
+	address = {Buenos Aires, Argentina},
+	title = {Towards {Automatic} {Generation} of {Short} {Summaries} of {Commits}},
+	isbn = {978-1-5386-0535-6},
+	doi = {10.1109/ICPC.2017.12},
+	abstract = {Committing to a version control system means submitting a software change to the system. Each commit can have a message to describe the submission. Several approaches have been proposed to automatically generate the content of such messages. However, the quality of the automatically generated messages falls far short of what humans write. In studying the differences between auto-generated and human-written messages, we found that 82\% of the human-written messages have only one sentence, while the automatically generated messages often have multiple lines. Furthermore, we found that the commit messages often begin with a verb followed by an direct object. This ﬁnding inspired us to use a “verb+object” format in this paper to generate short commit summaries. We split the approach into two parts: verb generation and object generation. As our ﬁrst try, we trained a classiﬁer to classify a diff to a verb. We are seeking feedback from the community before we continue to work on generating direct objects for the commits.},
+	language = {en},
+	urldate = {2019-09-24},
+	booktitle = {2017 {IEEE}/{ACM} 25th {International} {Conference} on {Program} {Comprehension} ({ICPC})},
+	publisher = {IEEE},
+	author = {Jiang, Siyuan and McMillan, Collin},
+	month = may,
+	year = {2017},
+	pages = {320--323}
+}
+
+@inproceedings{buse_automatically_2010,
+	address = {Antwerp, Belgium},
+	title = {Automatically documenting program changes},
+	isbn = {978-1-4503-0116-9},
+	doi = {10.1145/1858996.1859005},
+	abstract = {Source code modiﬁcations are often documented with log messages. Such messages are a key component of software maintenance: they can help developers validate changes, locate and triage defects, and understand modiﬁcations. However, this documentation can be burdensome to create and can be incomplete or inaccurate.},
+	language = {en},
+	urldate = {2019-09-24},
+	booktitle = {Proceedings of the {IEEE}/{ACM} international conference on {Automated} software engineering - {ASE} '10},
+	publisher = {ACM Press},
+	author = {Buse, Raymond P.L. and Weimer, Westley R.},
+	year = {2010},
+	pages = {33},
+	annote = {DeltaDoc},
+	annote = {Found via references in "Towards Automatic Generation ofShort Summaries of Commits"}
+}
+
+@inproceedings{linares-vasquez_changescribe:_2015,
+	address = {Florence, Italy},
+	title = {{ChangeScribe}: {A} {Tool} for {Automatically} {Generating} {Commit} {Messages}},
+	isbn = {978-1-4799-1934-5},
+	shorttitle = {{ChangeScribe}},
+	doi = {10.1109/ICSE.2015.229},
+	abstract = {During software maintenances tasks, commit messages are an important source of information, knowledge, and documentation that developers rely upon. However, the number and nature of daily activities and interruptions can inﬂuence the quality of resulting commit messages. This formal demonstration paper presents ChangeScribe, a tool for automatically generating commit messages. ChangeScribe is available at http://www.cs.wm. edu/semeru/changescribe (Eclipse plugin, instructions, demos and the source code).},
+	language = {en},
+	urldate = {2019-09-24},
+	booktitle = {2015 {IEEE}/{ACM} 37th {IEEE} {International} {Conference} on {Software} {Engineering}},
+	publisher = {IEEE},
+	author = {Linares-Vasquez, Mario and Cortes-Coy, Luis Fernando and Aponte, Jairo and Poshyvanyk, Denys},
+	month = may,
+	year = {2015},
+	pages = {709--712}
+}
+
+@inproceedings{awad_commit_2019,
+	address = {Cairo, Egypt},
+	title = {Commit {Message} {Generation} from {Code} {Differences} using {Hidden} {Markov} {Models}},
+	isbn = {978-1-4503-6105-7},
+	doi = {10.1145/3328833.3328873},
+	abstract = {Commit messages are developer-written messages that document code changes. Such change might be adding features, fixing bugs or simply code updates. Although these messages help in understanding the evolution of any software, it is quite often that developers disregard the process of writing these messages, when making a change. Many automated methods have been proposed to generate commit messages. Due to the inability of those techniques to represent higher order understanding of code changes, the quality of these messages in terms of logic and context representation is very low as opposed to developer written messages. To solve this problem, previous work used deep learning models -specifically, sequence-to-sequence models- were used to automate that task. This model delivered promising results on translating code differences to commit messages. However, after the model’s performance was thoroughly investigated in previous work. It was found out that code differences corresponding to almost every high quality commit messages generated by the model were very similar to one or more training sample code differences on a token level. Motivated by that observation, a k-nearest neighbor algorithm that outputs the same exact message of the nearest code difference was proposed in previous work. Inspired by the traditional solution to sequence modeling; Hidden Markov Models, we show that HMMs outperforms sequence-to-sequence models without outputting the same exact message of the nearest code diff, our experiments show an enhancement of 4\% against sequence to sequence models.},
+	language = {en},
+	urldate = {2019-09-25},
+	booktitle = {Proceedings of the 2019 8th {International} {Conference} on {Software} and {Information} {Engineering}  - {ICSIE} '19},
+	publisher = {ACM Press},
+	author = {Awad, Ahmed and Nagaty, Khaled},
+	year = {2019},
+	pages = {96--99}
+}
+
+@inproceedings{liu_generating_2019,
+	address = {Montreal, QC, Canada},
+	title = {Generating {Commit} {Messages} from {Diffs} using {Pointer}-{Generator} {Network}},
+	isbn = {978-1-72813-412-3},
+	doi = {10.1109/MSR.2019.00056},
+	abstract = {The commit messages in source code repositories are valuable but not easy to be generated manually in time for tracking issues, reporting bugs, and understanding codes. Recently published works indicated that the deep neural machine translation approaches have drawn considerable attentions on automatic generation of commit messages. However, they could not deal with out-of-vocabulary (OOV) words, which are essential context-speciﬁc identiﬁers such as class names and method names in code diffs. In this paper, we propose PtrGNCMsg, a novel approach which is based on an improved sequence-to-sequence model with the pointer-generator network to translate code diffs into commit messages. By searching the smallest identiﬁer set with the highest probability, PtrGNCMsg outperforms recent approaches based on neural machine translation, and ﬁrst enables the prediction of OOV words. The experimental results based on the corpus of diffs and manual commit messages from the top 2,000 Java projects in GitHub show that PtrGNCMsg outperforms the state-of-the-art approach with improved BLEU by 1.02, ROUGE-1 by 4.00 and ROUGE-L by 3.78, respectively.},
+	language = {en},
+	urldate = {2019-09-25},
+	booktitle = {2019 {IEEE}/{ACM} 16th {International} {Conference} on {Mining} {Software} {Repositories} ({MSR})},
+	publisher = {IEEE},
+	author = {Liu, Qin and Liu, Zihe and Zhu, Hongming and Fan, Hongfei and Du, Bowen and Qian, Yu},
+	month = may,
+	year = {2019},
+	pages = {299--309}
+}
+
+@article{loyola_neural_2017,
+	title = {A {Neural} {Architecture} for {Generating} {Natural} {Language} {Descriptions} from {Source} {Code} {Changes}},
+	abstract = {We propose a model to automatically describe changes introduced in the source code of a program using natural language. Our method receives as input a set of code commits, which contains both the modiﬁcations and message introduced by an user. These two modalities are used to train an encoder-decoder architecture. We evaluated our approach on twelve real world open source projects from four different programming languages. Quantitative and qualitative results showed that the proposed approach can generate feasible and semantically sound descriptions not only in standard in-project settings, but also in a cross-project setting.},
+	language = {en},
+	urldate = {2019-09-25},
+	journal = {arXiv:1704.04856 [cs]},
+	author = {Loyola, Pablo and Marrese-Taylor, Edison and Matsuo, Yutaka},
+	month = apr,
+	year = {2017},
+	note = {arXiv: 1704.04856},
+	keywords = {Computer Science - Computation and Language},
+	annote = {Comment: Accepted at ACL 2017}
+}
+
+@inproceedings{shen_automatic_2016,
+	address = {Atlanta, GA, USA},
+	title = {On {Automatic} {Summarization} of {What} and {Why} {Information} in {Source} {Code} {Changes}},
+	isbn = {978-1-4673-8845-0},
+	doi = {10.1109/COMPSAC.2016.162},
+	abstract = {Accurate and complete commit messages summarizing software changes are important to support various software maintenance activities. In practice, these commit messages are often manually submitted by individual software developer to provide information about the changes involved in the incremental changes. Hence, the content and quality of these commit messages may be different. For example, some commit messages are too short and lack of essential information while others with too much detailed information can be timeconsuming to read. What’s more, most of the commit messages focus on what has been changed by developers in a commit, but why they changed and the motivation behind the code changes (which can assist developers in understanding code changes), are usually ignored. In this paper, we present an approach that can automatically generate the commit messages related to the code changes, including not only what have been changed but also why they were changed. Our approach uses method stereotypes and the type of changes to generate commit messages. We evaluate our approach by comparing the quality of generated messages with the original commit messages written by the original developers and those generated by a state-of-art technique, i.e., ChangeScribe. The results demonstrate that the messages generated by our approach are preferred in about 69\% of the cases.},
+	language = {en},
+	urldate = {2019-09-25},
+	booktitle = {2016 {IEEE} 40th {Annual} {Computer} {Software} and {Applications} {Conference} ({COMPSAC})},
+	publisher = {IEEE},
+	author = {Shen, Jinfeng and Sun, Xiaobing and Li, Bin and Yang, Hui and Hu, Jiajun},
+	month = jun,
+	year = {2016},
+	pages = {103--112}
+}
+
+@inproceedings{cortes-coy_automatically_2014,
+	address = {Victoria, BC, Canada},
+	title = {On {Automatically} {Generating} {Commit} {Messages} via {Summarization} of {Source} {Code} {Changes}},
+	isbn = {978-1-4799-6148-1},
+	doi = {10.1109/SCAM.2014.14},
+	abstract = {Although version control systems allow developers to describe and explain the rationale behind code changes in commit messages, the state of practice indicates that most of the time such commit messages are either very short or even empty. In fact, in a recent study of 23K+ Java projects it has been found that only 10\% of the messages are descriptive and over 66\% of those messages contained fewer words as compared to a typical English sentence (i.e., 15-20 words). However, accurate and complete commit messages summarizing software changes are important to support a number of development and maintenance tasks. In this paper we present an approach, coined as ChangeScribe, which is designed to generate commit messages automatically from change sets. ChangeScribe generates natural language commit messages by taking into account commit stereotype, the type of changes (e.g., ﬁles rename, changes done only to property ﬁles), as well as the impact set of the underlying changes. We evaluated ChangeScribe in a survey involving 23 developers in which the participants analyzed automatically generated commit messages from real changes and compared them with commit messages written by the original developers of six open source systems. The results demonstrate that automatically generated messages by ChangeScribe are preferred in about 62\% of the cases for large commits, and about 54\% for small commits.},
+	language = {en},
+	urldate = {2019-09-25},
+	booktitle = {2014 {IEEE} 14th {International} {Working} {Conference} on {Source} {Code} {Analysis} and {Manipulation}},
+	publisher = {IEEE},
+	author = {Cortes-Coy, Luis Fernando and Linares-Vasquez, Mario and Aponte, Jairo and Poshyvanyk, Denys},
+	month = sep,
+	year = {2014},
+	pages = {275--284},
+	annote = {ChangeScribe}
+}
+
+@inproceedings{liu_neural-machine-translation-based_2018,
+	address = {Montpellier, France},
+	title = {Neural-machine-translation-based commit message generation: how far are we?},
+	isbn = {978-1-4503-5937-5},
+	shorttitle = {Neural-machine-translation-based commit message generation},
+	doi = {10.1145/3238147.3238190},
+	abstract = {Commit messages can be regarded as the documentation of software changes. These messages describe the content and purposes of changes, hence are useful for program comprehension and software maintenance. However, due to the lack of time and direct motivation, commit messages sometimes are neglected by developers. To address this problem, Jiang et al. proposed an approach (we refer to it as NMT ), which leverages a neural machine translation algorithm to automatically generate short commit messages from code. The reported performance of their approach is promising, however, they did not explore why their approach performs well. Thus, in this paper, we first perform an in-depth analysis of their experimental results. We find that (1) Most of the test diffs from which NMT can generate high-quality messages are similar to one or more training diffs at the token level. (2) About 16\% of the commit messages in Jiang et al.’s dataset are noisy due to being automatically generated or due to them describing repetitive trivial changes. (3) The performance of NMT declines by a large amount after removing such noisy commit messages. In addition, NMT is complicated and time-consuming. Inspired by our first finding, we proposed a simpler and faster approach, named NNGen (Nearest Neighbor Generator), to generate concise commit messages using the nearest neighbor algorithm. Our experimental results show that NNGen is over 2,600 times faster than NMT , and outperforms NMT in terms of BLEU (an accuracy measure that is widely used to evaluate machine translation systems) by 21\%. Finally, we also discuss some observations for the road ahead for automated commit message generation to inspire other researchers.},
+	language = {en},
+	urldate = {2019-10-01},
+	booktitle = {Proceedings of the 33rd {ACM}/{IEEE} {International} {Conference} on {Automated} {Software} {Engineering}  - {ASE} 2018},
+	publisher = {ACM Press},
+	author = {Liu, Zhongxin and Xia, Xin and Hassan, Ahmed E. and Lo, David and Xing, Zhenchang and Wang, Xinyu},
+	year = {2018},
+	pages = {373--384}
+}
+
+@inproceedings{huang_mining_2017,
+	address = {Toronto, ON},
+	title = {Mining {Version} {Control} {System} for {Automatically} {Generating} {Commit} {Comment}},
+	isbn = {978-1-5090-4039-1},
+	doi = {10.1109/ESEM.2017.56},
+	abstract = {Commit comments increasingly receive attention as an important complementary component in code change comprehension. To address the comment scarcity issue, a variety of automatic approaches for commit comment generation have been intensively proposed. However, most of these approaches mechanically outline a superﬁcial level summary of the changed software entities, the change intent behind the code changes is lost (e.g., the existing approaches cannot generate such comment: “ﬁxing null pointer exception”). Considering the comments written by developers often describe the intent behind the code change, we propose a method to automatically generate commit comment by reusing the existing comments in version control system. Speciﬁcally, for an input commit, we apply syntax, semantic, pre-syntax, and pre-semantic similarities to discover the similar commits from half a million commits, and recommend the reusable comments to the input commit from the ones of the similar commits. We evaluate our approach on 7 projects. The results show that 9.1\% of the generated comments are good, 27.7\% of the generated comments need minor ﬁx, and 63.2\% are bad, and we also analyze the reasons that make a comment available or unavailable.},
+	language = {en},
+	urldate = {2019-10-01},
+	booktitle = {2017 {ACM}/{IEEE} {International} {Symposium} on {Empirical} {Software} {Engineering} and {Measurement} ({ESEM})},
+	publisher = {IEEE},
+	author = {Huang, Yuan and Zheng, Qiaoyang and Chen, Xiangping and Xiong, Yingfei and Liu, Zhiyong and Luo, Xiaonan},
+	month = nov,
+	year = {2017},
+	pages = {414--423}
+}
+
+@inproceedings{roehm_how_2012,
+	address = {Zurich},
+	title = {How do professional developers comprehend software?},
+	isbn = {978-1-4673-1066-6 978-1-4673-1067-3},
+	doi = {10.1109/ICSE.2012.6227188},
+	abstract = {Research in program comprehension has considerably evolved over the past two decades. However, only little is known about how developers practice program comprehension under time and project pressure, and which methods and tools proposed by researchers are used in industry. This paper reports on an observational study of 28 professional developers from seven companies, investigating how developers comprehend software. In particular we focus on the strategies followed, information needed, and tools used.},
+	language = {en},
+	urldate = {2019-10-02},
+	booktitle = {2012 34th {International} {Conference} on {Software} {Engineering} ({ICSE})},
+	publisher = {IEEE},
+	author = {Roehm, Tobias and Tiarks, Rebecca and Koschke, Rainer and Maalej, Walid},
+	month = jun,
+	year = {2012},
+	pages = {255--265}
+}
+
+@inproceedings{lin_rouge:_2004,
+	title = {{ROUGE}: {A} {Package} for {Automatic} {Evaluation} of {Summaries}},
+	abstract = {ROUGE stands for Recall-Oriented Understudy for Gisting Evaluation. It includes measures to automatically determine the quality of a summary by comparing it to other (ideal) summaries created by humans. The measures count the number of overlapping units such as n-gram, word sequences, and word pairs between the computer-generated summary to be evaluated and the ideal summaries created by humans. This paper introduces four different ROUGE measures: ROUGE-N, ROUGE-L, ROUGE-W, and ROUGE-S included in the ROUGE summarization evaluation package and their evaluatio ns. Three of them have been used in the Document Understanding Conference (DUC) 2004, a large-scale summarization evaluation sponsored by NIST.},
+	language = {en},
+	booktitle = {Proceedings of the {Workshop} on {Text} {Summarization} {Branches} {Out}},
+	author = {Lin, Chin-Yew},
+	month = jul,
+	year = {2004},
+	pages = {8}
+}
+
+@inproceedings{papineni_bleu:_2001,
+	address = {Philadelphia, Pennsylvania},
+	title = {{BLEU}: a method for automatic evaluation of machine translation},
+	shorttitle = {{BLEU}},
+	doi = {10.3115/1073083.1073135},
+	language = {en},
+	urldate = {2019-10-02},
+	booktitle = {Proceedings of the 40th {Annual} {Meeting} on {Association} for {Computational} {Linguistics}  - {ACL} '02},
+	publisher = {Association for Computational Linguistics},
+	author = {Papineni, Kishore and Roukos, Salim and Ward, Todd and Zhu, Wei-Jing},
+	year = {2001},
+	pages = {311}
+}
+
+@article{osborne_re-evaluating_2006,
+	title = {Re-evaluating the {Role} of {BLEU} in {Machine} {Translation} {Research}},
+	abstract = {We argue that the machine translation community is overly reliant on the Bleu machine translation evaluation metric. We show that an improved Bleu score is neither necessary nor sufﬁcient for achieving an actual improvement in translation quality, and give two signiﬁcant counterexamples to Bleu’s correlation with human judgments of quality. This offers new potential for research which was previously deemed unpromising by an inability to improve upon Bleu scores.},
+	language = {en},
+	author = {Osborne, Chris Callison-Burch Miles and Koehn, Philipp},
+	month = apr,
+	year = {2006},
+	pages = {8}
+}
+
+@article{banerjee_meteor:_2005,
+	title = {{METEOR}: {An} {Automatic} {Metric} for {MT} {Evaluation} with {Improved} {Correlation} with {Human} {Judgments}},
+	abstract = {We describe METEOR, an automatic metric for machine translation evaluation that is based on a generalized concept of unigram matching between the machineproduced translation and human-produced reference translations. Unigrams can be matched based on their surface forms, stemmed forms, and meanings; furthermore, METEOR can be easily extended to include more advanced matching strategies. Once all generalized unigram matches between the two strings have been found, METEOR computes a score for this matching using a combination of unigram-precision, unigram-recall, and a measure of fragmentation that is designed to directly capture how well-ordered the matched words in the machine translation are in relation to the reference. We evaluate METEOR by measuring the correlation between the metric scores and human judgments of translation quality. We compute the Pearson R correlation value between its scores and human quality assessments of the LDC TIDES 2003 Arabic-to-English and Chinese-to-English datasets. We perform segment-bysegment correlation, and show that METEOR gets an R correlation value of 0.347 on the Arabic data and 0.331 on the Chinese data. This is shown to be an improvement on using simply unigramprecision, unigram-recall and their harmonic F1 combination. We also perform experiments to show the relative contributions of the various mapping modules.},
+	language = {en},
+	journal = {Proceedings of the ACL Workshop on Intrinsic and Extrinsic Evaluation Measures for Machine Translation and/or Summarization},
+	author = {Banerjee, Satanjeev and Lavie, Alon},
+	month = jun,
+	year = {2005},
+	pages = {65--72}
+}
+
+@inproceedings{dyer_boa:_2013,
+	address = {San Francisco, CA, USA},
+	title = {Boa: {A} language and infrastructure for analyzing ultra-large-scale software repositories},
+	isbn = {978-1-4673-3076-3 978-1-4673-3073-2},
+	shorttitle = {Boa},
+	doi = {10.1109/ICSE.2013.6606588},
+	abstract = {In today’s software-centric world, ultra-large-scale software repositories, e.g. SourceForge (350,000+ projects), GitHub (250,000+ projects), and Google Code (250,000+ projects) are the new library of Alexandria. They contain an enormous corpus of software and information about software. Scientists and engineers alike are interested in analyzing this wealth of information both for curiosity as well as for testing important hypotheses. However, systematic extraction of relevant data from these repositories and analysis of such data for testing hypotheses is hard, and best left for mining software repository (MSR) experts! The goal of Boa, a domain-speciﬁc language and infrastructure described here, is to ease testing MSR-related hypotheses. We have implemented Boa and provide a web-based interface to Boa’s infrastructure. Our evaluation demonstrates that Boa substantially reduces programming efforts, thus lowering the barrier to entry. We also see drastic improvements in scalability. Last but not least, reproducing an experiment conducted using Boa is just a matter of re-running small Boa programs provided by previous researchers.},
+	language = {en},
+	urldate = {2019-10-03},
+	booktitle = {2013 35th {International} {Conference} on {Software} {Engineering} ({ICSE})},
+	publisher = {IEEE},
+	author = {Dyer, Robert and Nguyen, Hoan Anh and Rajan, Hridesh and Nguyen, Tien N.},
+	month = may,
+	year = {2013},
+	pages = {422--431}
+}
+
+@inproceedings{rastkar_why_2013,
+	address = {San Francisco, CA, USA},
+	title = {Why did this code change?},
+	isbn = {978-1-4673-3076-3 978-1-4673-3073-2},
+	doi = {10.1109/ICSE.2013.6606676},
+	abstract = {When a developer works on code that is shared with other developers, she needs to know why the code has been changed in particular ways to avoid reintroducing bugs. A developer looking at a code change may have access to a short commit message or a link to a bug report which may provide detailed information about how the code changed but which often lacks information about what motivated the change. This motivational information can sometimes be found by piecing together information from a set of relevant project documents, but few developers have the time to ﬁnd and read the right documentation. We propose the use of multi-document summarization techniques to generate a concise natural language description of why code changed so that a developer can choose the right course of action.},
+	language = {en},
+	urldate = {2019-10-03},
+	booktitle = {2013 35th {International} {Conference} on {Software} {Engineering} ({ICSE})},
+	publisher = {IEEE},
+	author = {Rastkar, Sarah and Murphy, Gail C.},
+	month = may,
+	year = {2013},
+	pages = {1193--1196}
+}
+
+
+@inproceedings{iyer_summarizing_2016,
+	address = {Berlin, Germany},
+	title = {Summarizing {Source} {Code} using a {Neural} {Attention} {Model}},
+	doi = {10.18653/v1/P16-1195},
+	abstract = {High quality source code is often paired with high level summaries of the computation it performs, for example in code documentation or in descriptions posted in online forums. Such summaries are extremely useful for applications such as code search but are expensive to manually author, hence only done for a small fraction of all code that is produced. In this paper, we present the ﬁrst completely datadriven approach for generating high level summaries of source code. Our model, CODE-NN , uses Long Short Term Memory (LSTM) networks with attention to produce sentences that describe C\# code snippets and SQL queries. CODE-NN is trained on a new corpus that is automatically collected from StackOverﬂow, which we release. Experiments demonstrate strong performance on two tasks: (1) code summarization, where we establish the ﬁrst end-to-end learning results and outperform strong baselines, and (2) code retrieval, where our learned model improves the state of the art on a recently introduced C\# benchmark by a large margin.},
+	language = {en},
+	urldate = {2019-10-16},
+	booktitle = {Proceedings of the 54th {Annual} {Meeting} of the {Association} for {Computational} {Linguistics} ({Volume} 1: {Long} {Papers})},
+	publisher = {Association for Computational Linguistics},
+	author = {Iyer, Srinivasan and Konstas, Ioannis and Cheung, Alvin and Zettlemoyer, Luke},
+	year = {2016},
+	pages = {2073--2083}
+}
+
+
+@article{sennrich_nematus:_2017,
+	title = {Nematus: a {Toolkit} for {Neural} {Machine} {Translation}},
+	shorttitle = {Nematus},
+	abstract = {We present Nematus, a toolkit for Neural Machine Translation. The toolkit prioritizes high translation accuracy, usability, and extensibility. Nematus has been used to build top-performing submissions to shared translation tasks at WMT and IWSLT, and has been used to train systems for production environments.},
+	language = {en},
+	urldate = {2019-10-16},
+	journal = {arXiv:1703.04357 [cs]},
+	author = {Sennrich, Rico and Firat, Orhan and Cho, Kyunghyun and Birch, Alexandra and Haddow, Barry and Hitschler, Julian and Junczys-Dowmunt, Marcin and Läubli, Samuel and Barone, Antonio Valerio Miceli and Mokry, Jozef and Nădejde, Maria},
+	month = mar,
+	year = {2017},
+	note = {arXiv: 1703.04357},
+	keywords = {Computer Science - Computation and Language},
+	annote = {Comment: EACL 2017 demo track}
+}
+
+
+@techreport{marcus_building_1993,
+	address = {Fort Belvoir, VA},
+	title = {Building a {Large} {Annotated} {Corpus} of {English}: {The} {Penn} {Treebank}:},
+	shorttitle = {Building a {Large} {Annotated} {Corpus} of {English}},
+	abstract = {In this paper, we review our experience with constructing one such large annotated corpus--the Penn Treebank, a corpus consisting of over 4.5 million words of American English. During the first three-year phase of the Penn Treebank Project (1989-1992), this corpus has been annotated for part-of-speech (POS) information. In addition, over half of it has been annotated for skeletal syntactic structure.},
+	language = {en},
+	urldate = {2019-10-17},
+	institution = {Defense Technical Information Center},
+	author = {Marcus, Mitch},
+	month = apr,
+	year = {1993},
+	doi = {10.21236/ADA273556}
+}
+
+
+@inproceedings{koehn_moses:_2007,
+	address = {Prague, Czech Republic},
+	title = {Moses: open source toolkit for statistical machine translation},
+	shorttitle = {Moses},
+	doi = {10.3115/1557769.1557821},
+	abstract = {We describe an open-source toolkit for statistical machine translation whose novel contributions are (a) support for linguistically motivated factors, (b) confusion network decoding, and (c) efficient data formats for translation models and language models. In addition to the SMT decoder, the toolkit also includes a wide variety of tools for training, tuning and applying the system to many translation tasks.},
+	language = {en},
+	urldate = {2019-10-17},
+	booktitle = {Proceedings of the 45th {Annual} {Meeting} of the {ACL} on {Interactive} {Poster} and {Demonstration} {Sessions} - {ACL} '07},
+	publisher = {Association for Computational Linguistics},
+	author = {Koehn, Philipp and Zens, Richard and Dyer, Chris and Bojar, Ondřej and Constantin, Alexandra and Herbst, Evan and Hoang, Hieu and Birch, Alexandra and Callison-Burch, Chris and Federico, Marcello and Bertoldi, Nicola and Cowan, Brooke and Shen, Wade and Moran, Christine},
+	year = {2007},
+	pages = {177}
+}
+
+@article{luong2015effective,
+  title={Effective approaches to attention-based neural machine translation},
+  author={Luong, Minh-Thang and Pham, Hieu and Manning, Christopher D},
+  journal={arXiv preprint arXiv:1508.04025},
+  year={2015}
+}
+
+@inproceedings{sutskever2014sequence,
+  title={Sequence to sequence learning with neural networks},
+  author={Sutskever, Ilya and Vinyals, Oriol and Le, Quoc V},
+  booktitle={Advances in neural information processing systems},
+  pages={3104--3112},
+  year={2014}
+}
+
+@article{bahdanau2014neural,
+  title={Neural machine translation by jointly learning to align and translate},
+  author={Bahdanau, Dzmitry and Cho, Kyunghyun and Bengio, Yoshua},
+  journal={arXiv preprint arXiv:1409.0473},
+  year={2014}
+}
+
+@article{cho2014learning,
+  title={Learning phrase representations using RNN encoder-decoder for statistical machine translation},
+  author={Cho, Kyunghyun and Van Merri{\"e}nboer, Bart and Gulcehre, Caglar and Bahdanau, Dzmitry and Bougares, Fethi and Schwenk, Holger and Bengio, Yoshua},
+  journal={arXiv preprint arXiv:1406.1078},
+  year={2014}
+}
+
+@article{williams1989learning,
+  title={A learning algorithm for continually running fully recurrent neural networks},
+  author={Williams, Ronald J and Zipser, David},
+  journal={Neural computation},
+  volume={1},
+  number={2},
+  pages={270--280},
+  year={1989},
+  publisher={MIT Press}
+}
+
+@inproceedings{gal2016theoretically,
+  title={A theoretically grounded application of dropout in recurrent neural networks},
+  author={Gal, Yarin and Ghahramani, Zoubin},
+  booktitle={Advances in neural information processing systems},
+  pages={1019--1027},
+  year={2016}
+}
+@electronic{network_pic,
+    author   = {Raimi Karim},
+    title    = {Attn: Illustrated Attention},
+    url       = {https://towardsdatascience.com/attn-illustrated-attention-5ec4ad276ee3},
+    note = {Retrieved on 22-10-2019}
+}
+    
+@misc{mikolov2013efficient,
+    title={Efficient Estimation of Word Representations in Vector Space},
+    author={Tomas Mikolov and Kai Chen and Greg Corrado and Jeffrey Dean},
+    year={2013},
+    eprint={1301.3781},
+    archivePrefix={arXiv},
+    primaryClass={cs.CL}
+}
+@misc{alon2018code2vec,
+    title={code2vec: Learning Distributed Representations of Code},
+    author={Uri Alon and Meital Zilberstein and Omer Levy and Eran Yahav},
+    year={2018},
+    eprint={1803.09473},
+    archivePrefix={arXiv},
+    primaryClass={cs.LG}
+}
+
+@misc{alon2018code2seq,
+    title={code2seq: Generating Sequences from Structured Representations of Code},
+    author={Uri Alon and Shaked Brody and Omer Levy and Eran Yahav},
+    year={2018},
+    eprint={1808.01400},
+    archivePrefix={arXiv},
+    primaryClass={cs.LG}
+}

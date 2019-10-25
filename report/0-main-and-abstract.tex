@@ -1,0 +1,90 @@
+%%%% Proceedings format for most of ACM conferences (with the exceptions listed below) and all ICPS volumes.
+\documentclass[sigconf]{acmart}
+
+% Added to remove conference information
+\settopmatter{printacmref=false} % Removes citation information below abstract
+\renewcommand\footnotetextcopyrightpermission[1]{} % removes footnote with conference information in first column
+\pagestyle{plain} % removes running headers
+
+%%%% Proceedings format for SIGPLAN conferences 
+% \documentclass[sigplan, anonymous, review]{acmart}
+
+%%%% Proceedings format for SIGCHI conferences
+% \documentclass[sigchi, review]{acmart}
+
+%%%% To use the SIGCHI extended abstract template, please visit
+% https://www.overleaf.com/read/zzzfqvkmrfzn
+
+
+\usepackage{booktabs} % For formal tables
+\usepackage{rotating} % Rotating labels in table
+\usepackage{cleveref} % Better referencing
+
+% Barchart
+\usepackage{xcolor}
+\usepackage{pgfplots}
+\usepackage{tikz}
+\usepackage[colorinlistoftodos,prependcaption]{todonotes}
+\let\svtodo\todo\renewcommand\todo[1]{\svtodo[inline]{#1}}
+\newcommand{\forward}[1]{\overrightarrow{#1}}
+\newcommand{\backward}[1]{\overleftarrow{#1}}
+\newcommand{\token}[1]{<#1>}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+% Copyright
+\setcopyright{none}
+
+\begin{document}
+\title{Generating Commit Messages from Git Diffs}
+
+\author{Sven van Hal}
+\affiliation{%
+ \institution{Delft University of Technology}}
+ \email{S.R.P.vanHal@student.tudelft.nl}
+ 
+ \author{Mathieu Post}
+\affiliation{%
+ \institution{Delft University of Technology}}
+ \email{M.Post@student.tudelft.nl}
+
+\author{Kasper Wendel}
+\affiliation{%
+ \institution{Delft University of Technology}}
+ \email{K.Wendel@student.tudelft.nl}
+
+
+\begin{abstract}
+Commit messages aid developers in their understanding of a continuously evolving codebase. However, developers not always document code changes properly. Automatically generating commit messages would relieve this burden on developers.
+
+Recently, a number of different works have demonstrated the feasibility of using methods from neural machine translation to generate commit messages. This work aims to reproduce a prominent research paper in this field, as well as attempt to improve upon their results by proposing a novel preprocessing technique.
+
+A reproduction of the reference neural machine translation model was able to achieve slightly better results on the same dataset. When applying more rigorous preprocessing, however, the performance dropped significantly. This demonstrates the inherent shortcoming of current commit message generation models, which perform well by memorizing certain constructs.
+
+Future research directions might include improving diff embeddings and focusing on specific groups of commits.
+\end{abstract}
+
+\keywords{Commit Message Generation, Software Engineering, Sequence-to-Sequence, Neural Machine Translation}
+
+%Conference
+\acmConference[Machine Learning and Analytics for Software Engineering]{Machine Learning and Analytics for Software Engineering}{October 2019}
+
+\settopmatter{printacmref=false}
+\pagestyle{plain}
+\maketitle
+
+\input{1-introduction.tex}
+\input{2-background.tex}
+\input{3-approach.tex}
+\input{4-preprocessing.tex}
+\input{5-results.tex}
+\input{6-discussion.tex}
+\input{7-conclusion.tex}
+\input{8-reflection.tex}
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{bibliography}
+
+\input{appendix.tex}
+
+\end{document}
