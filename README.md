@@ -46,6 +46,9 @@ The test script will compute the following on the test set:
 * Inference on the diff data. The file with predictions of the commit messages are stored with the `.pred` suffix. 
 For the exact files location see `config['inference']`.
 
+## Existing implementation
+The `OpenNMT-py` toolkit from [here](https://github.com/OpenNMT/OpenNMT-py) is included in this repository. It can be execute with the test and train scripts in `scripts` from the root of this repository with `./scripts/train.sh` or `./scripts/test.sh`
+
 ## Configs
 The configuration used in this research are the following:
 * Java data: `config/java.json`
