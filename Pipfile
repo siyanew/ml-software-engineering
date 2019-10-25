@@ -11,6 +11,7 @@ spacy = "*"
 orjson = "*"
 PyGithub = "*"
 gitpython = "*"
+py-rouge = "*"
 
 [requires]
 python_version = "3.7"
