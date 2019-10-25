@@ -1,5 +1,8 @@
 # IN4334 - Analytics and Machine Learning for Software Engineering
-Analytics and Machine Learning for Software Engineering
+This repository contains the source code for the course IN4334 - Analytics and Machine Learning for Software Engineering given at the Delft University of Technology.
+With the help of deep learning, commit messages were generated based on `git diff` files with a Sequence to Sequence model.
+For more information see the [paper](ML4SE_Final_Report_Group4.pdf).
+
 
 ## Preprocessing
 First install the required dependencies:
@@ -28,12 +31,16 @@ nltk.download('punkt')
 
 Now, make the necessary modifications to the configuration in `preprocessing/constants.py`. Then, from the root of this repo, run `python -m preprocessing.main`. The script will first index the dataset, which can take a couple of minutes, and then process the dataset, which can take more than an hour.
 
+## GPU support
+
 ## Training a model
 * Training from config: `python train.py --config config/<config.json>`
 * Training from checkpoint: `python train.py --resume saved/models/<subdirectories>/checkpoint.pth`
 * Analyse the logs with Tensorboard: `tensorboard --logdir saved/log/<model_name>`
 
 Note that when resuming a model from a checkpoint, the corresponding `config.json` from `saved/models/<model_name>/<subdirectories>` will be used. 
+
+For GPU support for PyTorch with CUDA, see the official documentation [on the PyTorch site](https://pytorch.org/get-started/locally/)
   
 
 ## Testing a model
