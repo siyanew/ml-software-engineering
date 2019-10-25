@@ -168,7 +168,7 @@ def display_attention(sentence: List[str], translation: List[str], attention: Te
 
     cax = ax.matshow(attention, cmap='bone')
 
-    ax.tick_params(labelsize=15)
+    ax.tick_params(labelsize=5)
     ax.set_xticklabels([''] + ['<sos>'] + sentence + ['<eos>'],
                        rotation=45)
     ax.set_yticklabels([''] + translation)

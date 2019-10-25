@@ -62,7 +62,15 @@ class DiffLoader(BaseTextIterator):
 
         if not glob.glob(f"{data_dir}test.*"):
             print(f"Writing test split to file")
-            save_dataset(data_dir, test_data)
+            save_dataset(data_dir, test_data, fname="test")
+
+        if not glob.glob(f"{data_dir}train.*"):
+            print(f"Writing train split to file")
+            save_dataset(data_dir, train_data, fname="train")
+
+        if not glob.glob(f"{data_dir}valid.*"):
+            print(f"Writing valid split to file")
+            save_dataset(data_dir, valid_data, fname="valid")
 
         if not vocab_exists:
             # Build vocabs
