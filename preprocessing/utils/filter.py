@@ -5,7 +5,7 @@ from spacy.symbols import VERB, NOUN
 from spacy.tokens import Token
 
 from preprocessing import constants
-from preprocessing.utils.spacy import tokens_to_string
+from preprocessing.utils.nlp import tokens_to_string
 
 
 def filter_message_pre(msg: str) -> bool:
@@ -18,16 +18,12 @@ def filter_message_pre(msg: str) -> bool:
     if len(msg) < constants.PREPROCESS_COMMIT_MSG_MIN_LEN:
         return False
 
-    # Check for 'git revert' commits
-    # Pattern: Revert "(.*)"
-    # Examples:
-    #   Revert "Added exclamation point to story one." (#94)
-    #   Revert "Revert "Revert "add LimitMempoolSize logic for mempool"""
-    #   Revert "Revert "Initial commit""
+    # Filter 'git revert' commits
+    # Example: Revert "Added exclamation point to story one." (#94)
     if msg[:6] in ["Revert", "revert"]:
         return False
 
-    # Check for 'git merge' commits
+    # Filter 'git merge' commits
     if msg[:6] == "Merge:" or "Merge branch" in msg or "Merge pull request" in msg:
         return False
 
@@ -57,7 +53,6 @@ def filter_message_post(tokens: List[Token], nlp: Language) -> bool:
         # Second check to handle incorrect PoS-tags for 'commit style' sentences
         # E.g. "Support setting this" --> "Support" is classified as NOUN instead of VERB
         # By prepending 'I ', the classification is correct
-        # TODO: find and check edge cases
         check = nlp('I ' + tokens_to_string(tokens))
 
         return True if check[1].pos == VERB else False

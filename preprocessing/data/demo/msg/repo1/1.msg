@@ -1,5 +1,5 @@
 
-    Support setting client name for JedisCluster (#1386)
+    Support setting client name for JedisCluster 1.3.4 (#1386)
     [Motivation]
     JedisCluster should support setting client name similar with other types
     of Jedis.

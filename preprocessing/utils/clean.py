@@ -1,40 +1,32 @@
 import collections
 import pathlib
 import re
-from typing import List
-
-from spacy.language import Language
-from spacy.tokens import Token
 
 from preprocessing import constants
 from preprocessing.utils.converter import Converter
-from preprocessing.utils.spacy import is_sha1
 
-import nltk
-
-# Compiled regexes
-from preprocessing.utils.spacy import tokenize_diff
-
-re_git_id = re.compile(
-    r'\s?(\((closing\s+)?\s?issue(s?)\s?|\(\s?)?#[0-9]+(,\s?#[0-9]+)?\s?\)?')  # See: https://regex101.com/r/V1Scal/3
-re_label_colon = re.compile(r'^\w* ?:')  # Matches "{{Label:}} commit message"
-re_mention = re.compile(
-    r"((thanks\s?)(\s?to\s?)?)?@[a-z0-9']+\s?[.,!]*")  # Matches user mentions combined with 'thanks'
+re_git_id = re.compile(r'\s?(\((closing\s+)?\s?issue(s?)\s?|\(\s?)?#[0-9]+(,\s?#[0-9]+)?\s?\)?')  # See: https://regex101.com/r/V1Scal/3
+re_mention = re.compile(r"((thanks\s?)(\s?to\s?)?)?@[a-z0-9']+\s?[.,!]*")  # Matches user mentions (optionally combined with 'thanks')
 re_url = re.compile(r"((git|ssh|http(s)?)|(git@[\w.]+))(:(//)?)([\w.@:/\-~#'?,+]+)(\.git)?(/)?")  # Matches urls
 re_no_english = re.compile(r'[^\sa-zA-Z0-9.!"#$%&\'()*+,-./:;<=>?@[\]^_`{|}~]')  # From ptrgn-commit-msg project
 re_version_number = re.compile(r'(\d+)\.(\d+)(?:\.(\d+))?(?:-(\w+)|-)?')
 
 conv: Converter = Converter()
 
-sent_detector = nltk.data.load('tokenizers/punkt/english.pickle')
-
 
 def clean_commit_message(msg: str) -> str:
     """
-    Prepares commit message for the preliminary filter:
-        - Removes whitespace.
-        - Strips identifiers (#59)
-        - Strips labels ([label], label:)  TODO: maybe don't strip 'Added: this and that' constructions (so with verb)
+    Cleans commits message by:
+        1. Discarding everything after the first line
+        2. Removing GitHub issue IDs
+        3. Removing [...] labels at the beginning of messages
+        4. Removing @mentions
+        5. Removing URLs
+        6. Replacing version numbers with a generic identifier
+        7. Splitting sub-tokens (camelCase -> camel case)
+        8. Removing any remaining whitespace.
+
+    N.B.: Pass a string without leading whitespace.
     """
 
     # Discard everything after the first line
@@ -47,10 +39,6 @@ def clean_commit_message(msg: str) -> str:
     if len(msg) > 0 and msg[0] == '[':
         msg = msg.partition(']')[-1]
 
-    # Remove label with colon (at the start of the message)
-    # DISABLED: too many side effects
-    # msg = re_label_colon.sub('', msg)
-
     # Remove thanks messages
     msg = re_mention.sub('', msg)
 
@@ -59,6 +47,9 @@ def clean_commit_message(msg: str) -> str:
 
     # Remove "non-English" characters
     msg = re_no_english.sub('', msg)
+
+    # Replace version numbers
+    msg = re_version_number.sub(constants.PREPROCESS_DIFF_TOKEN_VERSION, msg)
 
     # Split sub-tokens
     msg = conv.splitSubTokens(msg)
@@ -69,65 +60,23 @@ def clean_commit_message(msg: str) -> str:
     return msg
 
 
-def parse_commit_message(msg: str, nlp: Language) -> List[Token]:
+def clean_diff(diff_raw: bytes) -> (str, dict):
     """
-    Processes (cleaned) commit message more thorougly:
-        - Extract dependencies / word functions from message
+    Cleans diffs by:
+        1. Keeping only the changed filename from blocks in the diff
+        2. Keeping only lines with changes (discarding same lines)
+        3. Removing all files with extensions not pre-approved
+        4. Keeping only the context part of the block metadata (and not the location in the file)
+        5. Splitting sub-tokens (camelCase -> camel case)
+
+    Finally, all changes are ordered by the files with the most changes.
+    All tokens are glued together with a single space (' ') to produce the output string.
+    During this process, statistics about how many lines kept etc. are collected to be analyzed after preprocessing.
     """
-
-    # Replace version numbers
-    msg = re_version_number.sub(constants.PREPROCESS_DIFF_TOKEN_VERSION, msg)
-
-    # Split sentences with NLTK
-    sents = sent_detector.tokenize(msg)
-    if len(sents) <= 0:
-        return None
-
-    # Run full SpaCy pipeline on first sentence
-    span = nlp(sents[0])
-    tokens: List[Token] = []
-
-    # Bail early if no first sentence
-    if len(span) == 0:
-        return tokens
-
-    last_non_punct_idx = 0
-    i = 0
-
-    # Generate a list of tokens we want to keep
-    for token in span:
-        # Remove unwanted PoS-tags
-        if token.pos in constants.PREPROCESS_IGNORE_POS:
-            continue
-
-        # Remove commit hashes
-        if is_sha1(token.text):
-            continue
-
-        i += 1
-
-        if token.text not in ['.', '..', '...', '?', '!', ';', ':', ',']:
-            last_non_punct_idx = i
-
-        tokens.append(token)
-
-    # Bail if no valid tokens in message
-    if len(tokens) == 0:
-        return []
-
-    # Remove trailing punctuation
-    tokens = tokens[0:last_non_punct_idx]
-
-    return tokens
-
-
-def _reduce_diff(lines: List[str]) -> (str, dict):
     result = []
 
-    # Processing flags
-    ignore_file = False
-    in_block = False
-    block_lines = []
+    # Decode byte stream and split lines
+    lines = diff_raw.decode(errors='ignore').split('\n')
 
     # Metadata
     meta = {
@@ -140,6 +89,11 @@ def _reduce_diff(lines: List[str]) -> (str, dict):
         'ext_count': collections.defaultdict(int)
     }
 
+    # Processing flags
+    ignore_file = False
+    in_block = False
+    block_lines = []
+
     for line in lines:
 
         # New file marker
@@ -147,7 +101,7 @@ def _reduce_diff(lines: List[str]) -> (str, dict):
 
             meta['file_count'] += 1
 
-            if block_lines:  # Commit changes in last file
+            if block_lines:  # Commit changes of previous file (if any)
                 result.append(block_lines)
                 meta['lines_kept'] += len(block_lines)
 
@@ -238,24 +192,3 @@ def _reduce_diff(lines: List[str]) -> (str, dict):
     result_str = ' '.join(result) if len(result) > 0 else None
 
     return result_str, meta
-
-
-def clean_diff(diff_raw: bytes) -> (str, dict):
-    # Decode byte stream and split lines
-    lines = diff_raw.decode(errors='ignore').split('\n')
-
-    # Process and filter lines in diff
-    return _reduce_diff(lines)
-
-
-def parse_diff(diff: str, meta: dict) -> (List[str], dict):
-    # Split diff into tokens
-    tokens: List[str] = tokenize_diff(diff)
-
-    meta['total_tokens'] = len(tokens) if tokens else 0
-
-    # Filter on the number of tokens in the diff
-    if len(tokens) >= constants.PREPROCESS_DIFF_NUM_TOKEN_CUTOFF:
-        return None
-
-    return tokens, meta
