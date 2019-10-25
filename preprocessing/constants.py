@@ -1,4 +1,5 @@
 import os
+
 from spacy.symbols import SPACE
 
 # RUN CONFIGURATION

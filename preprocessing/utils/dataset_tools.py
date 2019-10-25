@@ -1,8 +1,6 @@
 import pathlib
 from typing import List
 
-from preprocessing import constants
-
 
 def read_dataset(path_to_dataset: pathlib.Path, num_partitions=1) -> (List[tuple], int):
     """

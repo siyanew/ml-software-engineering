@@ -1,12 +1,11 @@
 from typing import List
 
+import nltk
 from spacy.language import Language
 from spacy.tokens import Token
 
 from preprocessing import constants
 from preprocessing.utils.nlp import is_sha1, tokenize_diff
-
-import nltk
 
 sent_detector = nltk.data.load('tokenizers/punkt/english.pickle')
 

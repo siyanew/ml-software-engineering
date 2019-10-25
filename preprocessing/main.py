@@ -1,24 +1,22 @@
 import itertools
+import multiprocessing as mp
 import pathlib
 import sys
 import time
 from multiprocessing import current_process
 from typing import List
-import orjson
 
+import orjson
 import spacy
 from spacy.language import Language
 from spacy.tokens import Token
 
 from preprocessing import constants
-from preprocessing.utils import dataset
+from preprocessing.utils import dataset_tools
 from preprocessing.utils.clean import clean_commit_message, clean_diff
-from preprocessing.utils.dataset import read_dataset, merge_output_files
+from preprocessing.utils.dataset_tools import read_dataset, merge_output_files
 from preprocessing.utils.filter import filter_message_pre, filter_message_post, filter_diff_pre
 from preprocessing.utils.nlp import tokens_to_string, add_special_tokenizer_cases
-
-import multiprocessing as mp
-
 from preprocessing.utils.parse import parse_commit_message, parse_diff
 
 
@@ -159,7 +157,7 @@ if __name__ == "__main__":
     print(f'Processing dataset "{DATASET}" with {num_ids} commits')
 
     # Check if results file is empty
-    if not dataset.check_results_file(ds_path, DATASET, force=constants.DEBUG):
+    if not dataset_tools.check_results_file(ds_path, DATASET, force=constants.DEBUG):
         print("Exiting...")
         sys.exit(0)
     else:

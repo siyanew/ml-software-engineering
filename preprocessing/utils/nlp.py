@@ -1,3 +1,4 @@
+import re
 from typing import Iterable, List
 
 from spacy.lang.char_classes import ALPHA
@@ -9,8 +10,6 @@ from spacy.tokens import Token
 from spacy.util import compile_prefix_regex, compile_suffix_regex, compile_infix_regex
 
 from preprocessing.constants import PREPROCESS_DIFF_TOKEN_VERSION as TOK_VERSION
-
-import re
 
 # Diff tokenizer regex. Improved by considering pairs of punctuation (e.g. ++, //, +=) as one token
 # Based on: https://www.nltk.org/api/nltk.tokenize.html (nltk.WordPunctTokenizer)
