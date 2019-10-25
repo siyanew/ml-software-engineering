@@ -1,5 +1,5 @@
 {
-  "name": "NMT1_lowered",
+  "name": "NMT1",
   "notes": "NMT1 dataset from jiang et al.",
   "n_gpu": 1,
   "arch": {

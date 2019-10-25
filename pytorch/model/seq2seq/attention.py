@@ -9,6 +9,13 @@ from pytorch.model.init_weights import normal_with_bias
 
 
 class Model(BaseModel):
+    """
+    Seq2Seq model that uses attention to attent to important parts of the source sequence during generation of the
+    target sequence.
+
+    based on paper: Neural Machine Translation by Jointly Learning to Align and Translate
+    https://arxiv.org/abs/1409.0473
+    """
     def __init__(self, input_dim, output_dim, enc_emb_dim, dec_emb_dim, enc_hid_dim, dec_hid_dim,
                  enc_dropout, dec_dropout):
         super().__init__()
