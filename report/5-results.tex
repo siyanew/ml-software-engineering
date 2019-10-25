@@ -1,0 +1,35 @@
+\section{Results}\label{sec:results}
+
+\subsection{Experiment parameters}
+All of the models were trained with the encoder en decoder hidden dimension and embedding dimension of 512 and 256 respectively. The dropout in the embedding layers were set to $0.1$. The input and output dimension of the model differ per dataset as it contains a different amount of unique tokens based on the generated vocabulary. The vocabulary sizes of each dataset are shown in \Cref{tbl:vocabs} and these correspond to the input and output dimensions of the trained model. The batch size was 64 for all models.
+
+Note that the hidden and embedding dimensions of the model are half of the model that was trained by \citeauthor{jiang_automatically_2017}. This was due to the memory limitations of the GPU that was used.
+\begin{table}[]
+\caption{The vocabulary parameters for each dataset, where the number indicate the amount of unique tokens in the source or target vocabulary.}
+\label{tbl:vocabs}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Dataset}                   & \textbf{Source} & \textbf{Target} \\ \midrule
+Java Top 1000                      & 30,854                      & 13,871                      \\
+C\# Top 1000                       & 24,251                      & 11,382                      \\
+NMT1 \cite{jiang_automatically_2017} & 50,004                      & 14,200                      \\
+NMT1 - processed                   & 28,672                      & 14,817                      \\ \bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Testing performance}
+After training the model with the settings mentioned above, and according to the training procedure in \Cref{subsec:training}, the model was evaluated on the testing set. Both the BLEU and ROUGE score were computed and are shown in \Cref{tbl:results}. It can be seen that the testing results on the dataset that were collected and preprocessed in this research are significantly lower. The results on the dataset from \citeauthor{jiang_automatically_2017} are somewhat similar: 33.63 against the reported 31.92 in \cite{jiang_automatically_2017} 
+
+\begin{table*}[]
+\caption{The evaluation results on the testing dataset for each dataset.}
+\label{tbl:results}
+\begin{tabular}{@{}llllll@{}}
+\toprule
+\textbf{Dataset} & \textbf{BLEU} & \textbf{ROUGE-1} & \textbf{ROUGE-2} & \textbf{ROUGE-L} & \textbf{ROUGE-W} \\ \midrule
+Java top 1000                        & 5.33  & 23.60   & 10.87   & 26.52   & 19.35   \\
+C\# top 1000                         & 7.31  & 26.84   & 13.16   & 29.85   & 22.08   \\
+NMT1 \cite{jiang_automatically_2017} & \textbf{33.63} & \textbf{37.20}   & \textbf{23.22}   & \textbf{40.01}   & \textbf{30.10}   \\
+NMT1 - processed                     & 3.19  & 20.26   & 7.93   & 23.05   & 16.37   \\ \bottomrule
+\end{tabular}
+\end{table*}
+

@@ -1,0 +1,31 @@
+\section{Discussion}\label{sec:discussion}
+The results in \Cref{tbl:results} show a significant difference between the obtained performance between the NMT1 dataset from \cite{jiang_automatically_2017} and any other dataset. In this section a qualitative analysis is done to explain these results. Also, discussion points of this research and ideas for future research will be mentioned.
+
+\subsection{Qualitative analysis NMT1}
+One pattern in the commit message that is commonly seen in the testing dataset of NMT1 is \texttt{ignore update '<filename>'}, where \texttt{<filename>} differs among commits. A total of $12.76\%$ in the testing set has this pattern and the model was able to classify them all correctly. A visualisation of the attention of one of these examples is shown in \Cref{app:vis:ignore}. It can be seen that the model is able to attend to the path names at the start of the input sequence and copy the path name to the output to produce the commit message correctly. When we look at another message \texttt{prepared version 0 . 2 - snapshot} in \Cref{app:vis:prepare}, for which the prediction was \texttt{prepare next development version.}, the attention is all focused on one token in the input namely the slash token. The model is unable to generate the correct output tokens from input tokens.
+
+Still our model achieved a better BLEU score of 33.63 compared to the 31.92 in \cite{jiang_automatically_2017}. The only difference that was made in this research was to lower case all of the input tokens during vocabulary generation. This led to a reduced output dimension of 14200 compared to the 17000 in \cite{jiang_automatically_2017}. Thus the problem was less computational expensive and our model was able to achieve better results.
+
+When the preprocessing from \Cref{sec:preprocessing} is applied on the NMT1 dataset, only the filename and his extension are retrained from the full path name. This means that the model can not simply copy the input tokens to the output tokens anymore. This degrades the model performance as a high percentage of the testing set was in this pattern.
+
+On both the Java and C\# dataset that was collected in this research, the trained model also performs rather poorly. Regardless of the programming language that the model is trained upon, the performance is significantly worse than achieved on the dataset from \cite{jiang_automatically_2017}. We conclude that this performance difference comes from the fact that the model tries to learn to translate long diff sequence into short message sequences, something it is unable to do. The testing dataset from \cite{jiang_automatically_2017} contains many easier examples than a real world dataset collected from GitHub. It is still unclear to us how \citeauthor{jiang_automatically_2017} created the training testing split for their dataset and this likely has a high influence.
+
+\subsection{Discussion points}
+Certain points in this research are subjected to some critical discussion. Firstly, the models that were trained in this research had a lower dimensionality than in \cite{jiang_automatically_2017} due to GPU limitations. It is expected that the same kind of results will be achieved if these dimensions are higher, as the model tries to solve a problem that is unsolvable. 
+
+Another fact is that during translation to a prediction, the tokens are generated in a greedy fashion and the token with the highest probability is selected. Another approach to do this would be beam-search, in which multiple option sets are explored to find the set that has the highest likelihood. This could lead to better translations.
+
+\subsection{Future research}
+One of the problems of this research is that a sequence of tokens in the form of a \texttt{git diff} file is unable to capture the structure of the code changes. An interesting approach to this problem would be to embed the code before and after the code changes, and subtract or concatenated these embeddings to have a vector representation of the code changes. However, this would require a code embedding that can embed multiple functions or files into a single vector that retains the information. More research in embedding the code properly could lead to interesting results and message generation.
+
+Another point to improve upon in future research could be to first classify commits into multiple categories such as additions, deletions, and refactors. It is hypothesized that these commits have a structural difference among them, and training different models could lead to exploitation of these factors and hopefully to better results.
+
+% Discussion
+% - The tokens of the diff file do not encapsulate the true meaning of the code changes - it misses context
+% - Code needs to be embedded (Code2vec)
+% - Embed code before/after - take difference of embeddings to truely show the changes
+% - Classification of the commits: addition, deletion, refactor -> might be better to train a model per code change type
+% - Better Neural Networks: Transformers, Convolutional Sequence to Sequence learning, Pointer networks
+% - Embeddings: pretrained?? 
+% - Better selection of target tokens (is now greedy: token with highest cond. prob) -> beam search
+% - Mostly predicts "updated readme . md"
