@@ -8,8 +8,8 @@ from typing import Iterable
 from git import Repo, Commit
 from github import Github
 
-# language = 'java'
-language = 'c#'
+language = 'java'
+# language = 'c#'
 limit_amount_projects = 1000
 limit_amount_commits = 10000
 
