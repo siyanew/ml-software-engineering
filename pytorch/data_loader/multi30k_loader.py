@@ -5,8 +5,8 @@ import torch
 from torchtext.data import BucketIterator, Field
 from torchtext.datasets import Multi30k
 
-from base import BaseTextIterator
-from data_loader.utils import has_vocabs, load_vocabs, save_vocabs
+from pytorch.base import BaseTextIterator
+from pytorch.data_loader.utils import has_vocabs, load_vocabs, save_vocabs
 
 spacy_de = spacy.load('de')
 spacy_en = spacy.load('en')

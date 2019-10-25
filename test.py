@@ -10,9 +10,9 @@ from torch import Tensor
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
-import model.loss as module_loss
-from base import BaseModel, BaseTextIterator
-from parse_config import ConfigParser
+import pytorch.model.loss as module_loss
+from pytorch.base import BaseModel, BaseTextIterator
+from pytorch.parse_config import ConfigParser
 
 # Fix GPU problems by first calling current_device()
 # https://github.com/pytorch/pytorch/issues/17108

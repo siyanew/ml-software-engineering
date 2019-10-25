@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from base import BaseModel
-from model.init_weights import normal_with_bias
+from pytorch.model.init_weights import normal_with_bias
 
 
 class Model(BaseModel):

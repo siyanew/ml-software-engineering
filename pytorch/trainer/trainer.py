@@ -7,9 +7,9 @@ from torch.nn import Module
 from torch.optim.lr_scheduler import _LRScheduler
 from torch.optim.optimizer import Optimizer
 
-from base import BaseModel, BaseTrainer
-from parse_config import ConfigParser
-from utils import MetricTracker, inf_loop
+from pytorch.base import BaseModel, BaseTrainer
+from pytorch.parse_config import ConfigParser
+from pytorch.utils import MetricTracker, inf_loop
 
 
 class Trainer(BaseTrainer):

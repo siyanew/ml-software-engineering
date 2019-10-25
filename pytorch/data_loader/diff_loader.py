@@ -6,8 +6,8 @@ import torch
 from torchtext.data import BucketIterator, Field
 from torchtext.datasets import TranslationDataset
 
-from base import BaseTextIterator
-from data_loader.utils import has_vocabs, load_vocabs, save_dataset, save_vocabs, tokenize_diff, tokenize_msg
+from pytorch.base import BaseTextIterator
+from pytorch.data_loader.utils import has_vocabs, load_vocabs, save_dataset, save_vocabs, tokenize_diff, tokenize_msg
 
 
 class DiffLoader(BaseTextIterator):

@@ -7,7 +7,7 @@ import torch.nn.functional as F
 from torch import Tensor
 from torchtext.data import Batch
 
-from base import BaseModel
+from pytorch.base import BaseModel
 
 
 class Model(BaseModel):

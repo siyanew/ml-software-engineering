@@ -5,10 +5,10 @@ import random
 import numpy as np
 import torch
 
-import model.loss as module_loss
-import model.metric as module_metric
-from parse_config import ConfigParser
-from trainer import Trainer
+import pytorch.model.loss as module_loss
+import pytorch.model.metric as module_metric
+from pytorch.parse_config import ConfigParser
+from pytorch.trainer import Trainer
 
 # Fix random seeds for reproducibility
 SEED = 42

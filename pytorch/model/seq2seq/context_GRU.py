@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 
 from base import BaseModel
-from model.init_weights import normal
+from pytorch.model.init_weights import normal
 
 
 class Model(BaseModel):

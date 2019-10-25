@@ -1,14 +1,14 @@
 {
-  "name": "NMT1_small_vocab",
-  "notes": "Last model was unable reach the same performance on the test set as the validation set. We think that there is a larger difference in vocabs. Therefore, the amount of tokens is reduced to multi30k proportions.  ",
+  "name": "java",
+  "notes": "Our own collected Java dataset from GitHub",
   "n_gpu": 1,
   "arch": {
-    "file": "model.seq2seq.packed_and_attention",
+    "file": "pytorch.model.seq2seq.packed_and_attention",
     "class_name": "Model",
     "packed": true,
     "args": {
-      "input_dim": 8277,
-      "output_dim": 5593,
+      "input_dim": 30854,
+      "output_dim": 13871,
       "enc_emb_dim": 256,
       "dec_emb_dim": 256,
       "enc_hid_dim": 512,
@@ -18,19 +18,25 @@
     }
   },
   "data_loader": {
-    "file": "data_loader.nmt1_loader",
-    "class_name": "NMT1Loader",
+    "file": "pytorch.data_loader.diff_loader",
+    "class_name": "DiffLoader",
     "iterator": true,
     "args": {
-      "data_dir": "data/NMT1/",
+      "data_dir": "data/Top1000-Java/",
+      "file_path": "data/Top1000-Java/java-top-1000.processed.short",
       "packed": true,
+      "split_ratio": [
+        0.8,
+        0.1,
+        0.1
+      ],
       "vocab_max_sizes": [
         50000,
         17000
       ],
       "vocab_min_freqs": [
-        5,
-        2
+        1,
+        1
       ],
       "batch_sizes": [
         64,
@@ -67,8 +73,8 @@
     "tensorboard": true
   },
   "inference": {
-    "src_file": "data/NMT1/TestingSet/test.3000.diff",
-    "trg_file": "data/NMT1/TestingSet/test.3000.msg",
-    "pred_file": "data/NMT1/TestingSet/test.3000.pred"
+    "src_file": "data/Top1000-Java/test.diff",
+    "trg_file": "data/Top1000-Java/test.msg",
+    "pred_file": "data/Top1000-Java/test.pred"
   }
 }

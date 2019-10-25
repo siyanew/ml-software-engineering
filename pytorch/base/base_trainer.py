@@ -1,10 +1,16 @@
+import sys
 import time
 from abc import abstractmethod
 
 import torch
 from numpy import inf
 
-from logger import TensorboardWriter
+from pytorch.logger import TensorboardWriter
+
+# The final structure of the codebase is different than when some models where saved (train.py was in the pytorch
+# folder). Due to limitations in pickle, loading can then fail as it cannot find certain modules
+# Fix by inserting the new https://github.com/pytorch/pytorch/issues/3678
+sys.path.insert(0, './pytorch')
 
 
 class BaseTrainer:
@@ -167,8 +173,13 @@ class BaseTrainer:
 
         # load architecture params from checkpoint.
         if checkpoint['config']['arch'] != self.config['arch']:
+            self.logger.warning(checkpoint['config']['arch'])
             self.logger.warning("Warning: Architecture configuration given in config file is different from that of "
-                                "checkpoint. This may yield an exception while state_dict is being loaded.")
+                                "checkpoint. This may yield an exception while state_dict is being loaded. Please "
+                                "examine the configs below:")
+
+            print(checkpoint['config']['arch'])
+            print(self.config['arch'])
         self.model.load_state_dict(checkpoint['state_dict'])
 
         # load optimizer state from checkpoint only when optimizer type is not changed.

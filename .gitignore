@@ -160,5 +160,9 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-# Ignore generated model data
-model/*.pt
+### Project specific settings ###
+# Ignore datasets and model directories
+data/*
+!data/placeholder
+saved/*
+!saved/placeholder

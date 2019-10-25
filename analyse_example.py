@@ -2,7 +2,7 @@
 # Create helper functions
 import torch
 
-from parse_config import ConfigParser
+from pytorch.parse_config import ConfigParser
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
